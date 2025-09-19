@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: gestion-parque-tecnologico
+    env: node
+    buildCommand: npm install
+    startCommand: npm run dev
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_SUPABASE_URL
+        fromDatabase:
+          name: supabase
+          property: connectionString
+      - key: VITE_SUPABASE_ANON_KEY
+        fromDatabase:
+          name: supabase
+          property: connectionString

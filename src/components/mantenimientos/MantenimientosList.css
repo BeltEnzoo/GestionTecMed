@@ -1,0 +1,298 @@
+.mantenimientos-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.mantenimientos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.mantenimientos-header h1 {
+  color: #2c3e50;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.mantenimientos-header p {
+  color: #7f8c8d;
+  margin: 5px 0 0 0;
+  font-size: 1rem;
+}
+
+.mantenimientos-filters {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.filter-select {
+  padding: 12px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  min-width: 180px;
+}
+
+.mantenimientos-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.mantenimientos-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mantenimientos-table th {
+  background: #f8f9fa;
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #e1e8ed;
+  font-size: 14px;
+}
+
+.mantenimientos-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #e1e8ed;
+  vertical-align: top;
+}
+
+.mantenimientos-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.equipo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.equipo-nombre {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.equipo-descripcion {
+  font-size: 12px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.tipo-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.tipo-preventivo {
+  background: #d4edda;
+  color: #155724;
+}
+
+.tipo-correctivo {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.fecha-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fecha-completado {
+  font-size: 12px;
+  color: #28a745;
+  font-weight: 500;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-scheduled {
+  background: #cce7ff;
+  color: #0066cc;
+}
+
+.status-progress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+}
+
+.btn-warning {
+  background: #f39c12;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #e67e22;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mantenimientos-container {
+    padding: 15px;
+  }
+
+  .mantenimientos-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .mantenimientos-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .mantenimientos-filters {
+    flex-direction: column;
+  }
+
+  .mantenimientos-table-container {
+    overflow-x: auto;
+  }
+
+  .mantenimientos-table {
+    min-width: 600px;
+  }
+
+  .mantenimientos-table th,
+  .mantenimientos-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-sm {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .mantenimientos-table {
+    min-width: 500px;
+  }
+
+  .mantenimientos-table th,
+  .mantenimientos-table td {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .equipo-nombre {
+    font-size: 13px;
+  }
+
+  .equipo-descripcion {
+    font-size: 11px;
+  }
+}

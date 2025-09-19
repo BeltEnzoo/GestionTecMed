@@ -1,0 +1,239 @@
+/* Responsive Utilities */
+/* Breakpoints:
+   - Mobile: 0-639px
+   - Tablet: 640px-1023px  
+   - Desktop: 1024px+
+*/
+
+/* Mobile First Approach */
+/* Base styles are for mobile */
+
+/* Tablet styles */
+@media (min-width: 640px) {
+  /* Container adjustments */
+  .container-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  /* Grid adjustments */
+  .grid-responsive-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-responsive-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  /* Text adjustments */
+  .text-responsive-lg {
+    font-size: 1.125rem;
+  }
+  
+  .text-responsive-xl {
+    font-size: 1.25rem;
+  }
+  
+  /* Button adjustments */
+  .btn-responsive {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Card adjustments */
+  .card-responsive {
+    padding: 1.5rem;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  /* Container adjustments */
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+  
+  /* Grid adjustments */
+  .grid-responsive-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-responsive-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .grid-responsive-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  /* Text adjustments */
+  .text-responsive-lg {
+    font-size: 1.25rem;
+  }
+  
+  .text-responsive-xl {
+    font-size: 1.5rem;
+  }
+  
+  /* Button adjustments */
+  .btn-responsive {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+  
+  /* Card adjustments */
+  .card-responsive {
+    padding: 2rem;
+  }
+}
+
+/* Large desktop styles */
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+/* Mobile specific utilities */
+@media (max-width: 639px) {
+  /* Hide on mobile */
+  .hidden-mobile {
+    display: none !important;
+  }
+  
+  /* Stack elements vertically */
+  .stack-mobile {
+    flex-direction: column;
+  }
+  
+  /* Full width on mobile */
+  .full-width-mobile {
+    width: 100%;
+  }
+  
+  /* Smaller text on mobile */
+  .text-mobile-sm {
+    font-size: 0.875rem;
+  }
+  
+  /* Compact spacing on mobile */
+  .spacing-mobile-compact {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile-friendly buttons */
+  .btn-mobile {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Mobile table adjustments */
+  .table-mobile {
+    font-size: 0.75rem;
+  }
+  
+  .table-mobile th,
+  .table-mobile td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* Tablet specific utilities */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Hide on tablet */
+  .hidden-tablet {
+    display: none !important;
+  }
+  
+  /* Tablet grid */
+  .grid-tablet-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Tablet spacing */
+  .spacing-tablet {
+    padding: 1.25rem;
+  }
+}
+
+/* Desktop specific utilities */
+@media (min-width: 1024px) {
+  /* Hide on desktop */
+  .hidden-desktop {
+    display: none !important;
+  }
+  
+  /* Desktop grid */
+  .grid-desktop-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .grid-desktop-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Touch-friendly utilities for mobile */
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better spacing for touch */
+  .touch-spacing {
+    padding: 1rem;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .print-break {
+    page-break-before: always;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .high-contrast {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+}
+
+
