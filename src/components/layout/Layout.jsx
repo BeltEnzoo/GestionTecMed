@@ -67,7 +67,7 @@ const Layout = ({ children }) => {
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <h1 className="sidebar-title">
-            🏥 Gestión Médica
+            🏥Tec. Médica
           </h1>
           <button
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600"

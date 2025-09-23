@@ -28,9 +28,10 @@
 
 .mantenimientos-filters {
   display: flex;
-  gap: 20px;
+  gap: 45px;
   margin-bottom: 25px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-container {
@@ -40,11 +41,14 @@
 
 .search-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e1e8ed;
+  padding: 12px 16px !important;
+  border: 2px solid #1584d3;
   border-radius: 8px;
   font-size: 14px;
   transition: border-color 0.3s ease;
+  text-indent: 0 !important;
+  background-position: 16px center !important;
+  background-repeat: no-repeat !important;
 }
 
 .search-input:focus {
@@ -54,7 +58,7 @@
 
 .filter-select {
   padding: 12px 16px;
-  border: 2px solid #e1e8ed;
+  border: 2px solid #126dad;
   border-radius: 8px;
   font-size: 14px;
   background: white;

@@ -179,6 +179,23 @@ export const reportesService = {
     }
   },
 
+  // Obtener todos los equipos para exportación
+  async getAllEquipos() {
+    try {
+      const { data: equipos, error } = await supabase
+        .from('equipos')
+        .select('*')
+        .order('marca', { ascending: true })
+
+      if (error) throw error
+
+      return equipos || []
+    } catch (error) {
+      console.error('Error al obtener todos los equipos:', error)
+      return []
+    }
+  },
+
   // Obtener tendencias de mantenimiento
   async getTendenciasMantenimiento(meses = 12) {
     try {

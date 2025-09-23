@@ -5,6 +5,7 @@ export const useReportes = () => {
   const [estadisticas, setEstadisticas] = useState(null)
   const [reporteMantenimientos, setReporteMantenimientos] = useState(null)
   const [equiposRequierenAtencion, setEquiposRequierenAtencion] = useState(null)
+  const [todosLosEquipos, setTodosLosEquipos] = useState([])
   const [tendencias, setTendencias] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -54,6 +55,21 @@ export const useReportes = () => {
     }
   }
 
+  // Cargar todos los equipos
+  const cargarTodosLosEquipos = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const data = await reportesService.getAllEquipos()
+      setTodosLosEquipos(data)
+    } catch (err) {
+      setError(err.message)
+      console.error('Error al cargar todos los equipos:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Cargar tendencias de mantenimiento
   const cargarTendencias = async (meses = 12) => {
     try {
@@ -74,6 +90,7 @@ export const useReportes = () => {
     await Promise.all([
       cargarEstadisticas(),
       cargarEquiposRequierenAtencion(),
+      cargarTodosLosEquipos(),
       cargarTendencias()
     ])
   }
@@ -87,12 +104,14 @@ export const useReportes = () => {
     estadisticas,
     reporteMantenimientos,
     equiposRequierenAtencion,
+    todosLosEquipos,
     tendencias,
     loading,
     error,
     cargarEstadisticas,
     cargarReporteMantenimientos,
     cargarEquiposRequierenAtencion,
+    cargarTodosLosEquipos,
     cargarTendencias,
     cargarTodosLosDatos
   }

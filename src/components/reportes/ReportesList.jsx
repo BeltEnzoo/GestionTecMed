@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useReportes } from '../../hooks/useReportes'
 import { useHistorial } from '../../hooks/useHistorial'
 import EventoForm from './EventoForm'
+import ExportButtons from './ExportButtons'
 import { 
   ChartBarIcon, 
   ExclamationTriangleIcon,
@@ -16,12 +17,14 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline'
 import './ReportesList.css'
+import './ExportButtons.css'
 
 const ReportesList = () => {
   const {
     estadisticas,
     reporteMantenimientos,
     equiposRequierenAtencion,
+    todosLosEquipos,
     tendencias,
     loading,
     error,
@@ -38,13 +41,25 @@ const ReportesList = () => {
 
   const { eventos, cargarEventos } = useHistorial()
 
-  // Generar fechas por defecto (últimos 30 días)
+  // Generar fechas por defecto (últimos 30 días) y cargar datos
   React.useEffect(() => {
     const hoy = new Date()
     const hace30Dias = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000)
     
     setFechaFin(hoy.toISOString().split('T')[0])
     setFechaInicio(hace30Dias.toISOString().split('T')[0])
+    
+    // Cargar todos los datos al iniciar
+    cargarTodosLosDatos()
+    cargarEventos()
+    
+    // Cargar mantenimientos por defecto (últimos 30 días)
+    setTimeout(() => {
+      cargarReporteMantenimientos(
+        hace30Dias.toISOString().split('T')[0], 
+        hoy.toISOString().split('T')[0]
+      )
+    }, 1000)
   }, [])
 
   const handleGenerarReporte = async () => {
@@ -121,6 +136,14 @@ const ReportesList = () => {
           Análisis completo del estado de la tecnología médica
         </p>
       </div>
+
+      {/* Botones de Exportación */}
+      <ExportButtons 
+        equipos={todosLosEquipos || []}
+        mantenimientos={reporteMantenimientos || []}
+        eventos={eventos || []}
+        equipoSeleccionado={null}
+      />
 
       {/* Estadísticas Generales */}
       {estadisticas && (

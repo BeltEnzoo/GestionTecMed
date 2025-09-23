@@ -16,7 +16,11 @@ import {
   DocumentTextIcon,
   WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline'
+import EquipoEventsChart from './EquipoEventsChart'
+import ExportButtons from '../reportes/ExportButtons'
 import './EquipoDetail.css'
+import './EquipoEventsChart.css'
+import '../reportes/ExportButtons.css'
 
 const EquipoDetail = () => {
   const { id } = useParams()
@@ -176,6 +180,13 @@ const EquipoDetail = () => {
         >
           <WrenchScrewdriverIcon className="tab-icon" />
           Mantenimientos ({equipo.mantenimientos?.length || 0})
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'eventos' ? 'active' : ''}`}
+          onClick={() => setActiveTab('eventos')}
+        >
+          <ExclamationTriangleIcon className="tab-icon" />
+          Análisis de Eventos
         </button>
       </div>
 
@@ -412,6 +423,52 @@ const EquipoDetail = () => {
                 <p>Este equipo no tiene mantenimientos programados aún.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'eventos' && (
+          <div className="equipo-eventos">
+            <div className="eventos-header">
+              <h3>Análisis de Eventos</h3>
+              <p>Frecuencia de eventos y fallas a lo largo del tiempo</p>
+            </div>
+            
+            <EquipoEventsChart 
+              equipoId={equipo.id} 
+              equipoNombre={`${equipo.marca || 'Sin marca'} ${equipo.modelo || 'Sin modelo'}`}
+            />
+            
+            {/* Botón de Exportación de Eventos */}
+            <div style={{ margin: '1.5rem 0' }}>
+              <ExportButtons 
+                equipos={[equipo]}
+                mantenimientos={equipo.mantenimientos || []}
+                eventos={equipo.eventos || []}
+                equipoSeleccionado={equipo}
+              />
+            </div>
+            
+            <div className="eventos-insights">
+              <div className="insight-card">
+                <h4>📊 Interpretación del Gráfico</h4>
+                <ul>
+                  <li><strong>Picos altos:</strong> Períodos de mayor actividad de fallas</li>
+                  <li><strong>Tendencias:</strong> Patrones de comportamiento del equipo</li>
+                  <li><strong>Estacionalidad:</strong> Momentos del año con más problemas</li>
+                  <li><strong>Mejoras:</strong> Reducción de eventos después de mantenimientos</li>
+                </ul>
+              </div>
+              
+              <div className="insight-card">
+                <h4>🔍 Recomendaciones</h4>
+                <ul>
+                  <li>Analizar picos para identificar causas comunes</li>
+                  <li>Programar mantenimientos preventivos antes de picos esperados</li>
+                  <li>Considerar reemplazo si los eventos son muy frecuentes</li>
+                  <li>Documentar soluciones efectivas para futuras referencias</li>
+                </ul>
+              </div>
+            </div>
           </div>
         )}
       </div>

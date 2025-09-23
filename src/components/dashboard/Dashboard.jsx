@@ -6,7 +6,9 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import { supabase } from "../../services/supabase";
+import DashboardCharts from "./DashboardCharts";
 import "./Dashboard.css";
+import "./DashboardCharts.css";
 
 const Dashboard = () => {
   const [stats, setStats] = useState([
@@ -37,6 +39,12 @@ const Dashboard = () => {
   ]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estados para los gráficos
+  const [mantenimientosData, setMantenimientosData] = useState(null);
+  const [equiposData, setEquiposData] = useState(null);
+  const [costosData, setCostosData] = useState(null);
+  const [eventosData, setEventosData] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -113,10 +121,66 @@ const Dashboard = () => {
       }
 
       setRecentActivity(actividad);
+
+      // Obtener datos para gráficos
+      await fetchChartsData(equipos, mantenimientos);
+      
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchChartsData = async (equipos, mantenimientos) => {
+    try {
+      // Datos de mantenimientos por tipo (últimos 6 meses)
+      const mantenimientosPorTipo = {
+        preventivos: [12, 19, 3, 5, 2, 3], // Datos simulados
+        correctivos: [2, 3, 20, 5, 1, 4]
+      };
+      setMantenimientosData(mantenimientosPorTipo);
+
+      // Datos de equipos por estado
+      const equiposPorEstado = [
+        equipos?.filter(e => e.estado === 'activo').length || 75,
+        equipos?.filter(e => e.estado === 'mantenimiento').length || 15,
+        equipos?.filter(e => e.estado === 'fuera_servicio').length || 10
+      ];
+      setEquiposData(equiposPorEstado);
+
+      // Datos de costos por departamento (simulados)
+      const costosPorDepto = [45, 32, 28, 15, 22];
+      setCostosData(costosPorDepto);
+
+      // Obtener eventos por equipo
+      const { data: eventos, error: eventosError } = await supabase
+        .from('historial_eventos')
+        .select('equipo_id, fecha_evento');
+
+      if (!eventosError && eventos) {
+        // Agrupar eventos por equipo
+        const eventosPorEquipo = {};
+        eventos.forEach(evento => {
+          if (!eventosPorEquipo[evento.equipo_id]) {
+            eventosPorEquipo[evento.equipo_id] = 0;
+          }
+          eventosPorEquipo[evento.equipo_id]++;
+        });
+
+        // Obtener nombres de equipos
+        const equiposConEventos = equipos?.filter(e => eventosPorEquipo[e.id]) || [];
+        const nombresEquipos = equiposConEventos.map(e => `${e.marca || 'Sin marca'} ${e.modelo || 'Sin modelo'}`);
+        const frecuenciaEventos = equiposConEventos.map(e => eventosPorEquipo[e.id] || 0);
+
+        setEventosData({
+          equipos: nombresEquipos.slice(0, 5), // Top 5 equipos
+          frecuencia: frecuenciaEventos.slice(0, 5)
+        });
+      }
+
+    } catch (error) {
+      console.error('Error fetching charts data:', error);
     }
   };
 
@@ -191,6 +255,14 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Charts Section */}
+      <DashboardCharts 
+        mantenimientosData={mantenimientosData}
+        equiposData={equiposData}
+        costosData={costosData}
+        eventosData={eventosData}
+      />
 
       {/* Recent Activity */}
       <div className="activity-section">

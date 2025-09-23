@@ -274,7 +274,7 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
             className="equipo-form-close-btn"
             aria-label="Cerrar formulario"
           >
-            <XMarkIcon className="h-6 w-6" />
+                          <XMarkIcon className="h-4 w-4" />
           </button>
         </div>
 
@@ -700,19 +700,20 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                 <h3 className="equipo-form-section-title">Archivos y Documentos</h3>
                 
                 <div className="equipo-form-file-upload">
-                  <label className="equipo-form-file-label">
-                    <PhotoIcon className="h-8 w-8" />
-                    <span>Subir Archivos</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*,.pdf,.doc,.docx"
-                      onChange={handleFileUpload}
-                      className="equipo-form-file-input"
-                    />
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx"
+                    onChange={handleFileUpload}
+                    className="equipo-form-file-input"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="equipo-form-file-label">
+                    <PhotoIcon className="h-5 w-5" />
+                    <span>Seleccionar archivos</span>
                   </label>
                   <p className="equipo-form-file-help">
-                    Puedes subir fotos, manuales, certificados, etc.
+                    Formatos: JPG, PNG, PDF, DOC, DOCX (Máx. 10MB)
                   </p>
                 </div>
 
@@ -721,7 +722,7 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                     <h4 className="equipo-form-files-title">Archivos Subidos:</h4>
                     {uploadedFiles.map((file) => (
                       <div key={file.id} className="equipo-form-file-item">
-                        <DocumentIcon className="h-5 w-5" />
+                        <DocumentIcon className="h-4 w-4" />
                         <span className="equipo-form-file-name">{file.name}</span>
                         <span className="equipo-form-file-size">
                           {(file.size / 1024).toFixed(1)} KB
