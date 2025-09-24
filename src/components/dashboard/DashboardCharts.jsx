@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -34,6 +34,12 @@ const DashboardCharts = ({
   costosData,
   eventosData 
 }) => {
+  const [expandedChart, setExpandedChart] = useState(null);
+  
+  // Función para expandir/contraer gráficos
+  const toggleChartExpansion = (chartId) => {
+    setExpandedChart(expandedChart === chartId ? null : chartId);
+  };
   
   // Configuración común para los gráficos
   const chartOptions = {
@@ -151,6 +157,10 @@ const DashboardCharts = ({
 
   return (
     <div className="dashboard-charts">
+      {/* Overlay para gráficos expandidos */}
+      {expandedChart && (
+        <div className="chart-overlay active" onClick={() => setExpandedChart(null)} />
+      )}
       
       {/* Mobile Stats Cards - Only visible on mobile */}
       <div className="mobile-stats-grid">
@@ -187,7 +197,10 @@ const DashboardCharts = ({
       <div className="charts-grid">
         
         {/* Gráfico de Tendencias de Mantenimientos */}
-        <div className="chart-container">
+        <div 
+          className={`chart-container ${expandedChart === 'mantenimientos' ? 'expanded' : ''}`}
+          onClick={() => toggleChartExpansion('mantenimientos')}
+        >
           <div className="chart-header">
             <h3>Tendencias de Mantenimientos</h3>
             <p>Últimos 6 meses</p>
@@ -207,10 +220,24 @@ const DashboardCharts = ({
               }} 
             />
           </div>
+          {expandedChart === 'mantenimientos' && (
+            <button 
+              className="chart-close-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedChart(null);
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Gráfico de Costos por Departamento */}
-        <div className="chart-container">
+        <div 
+          className={`chart-container ${expandedChart === 'costos' ? 'expanded' : ''}`}
+          onClick={() => toggleChartExpansion('costos')}
+        >
           <div className="chart-header">
             <h3>Costos por Departamento</h3>
             <p>Mantenimientos y reparaciones</p>
@@ -230,10 +257,24 @@ const DashboardCharts = ({
               }} 
             />
           </div>
+          {expandedChart === 'costos' && (
+            <button 
+              className="chart-close-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedChart(null);
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Gráfico de Eventos por Equipo */}
-        <div className="chart-container">
+        <div 
+          className={`chart-container ${expandedChart === 'eventos' ? 'expanded' : ''}`}
+          onClick={() => toggleChartExpansion('eventos')}
+        >
           <div className="chart-header">
             <h3>Frecuencia de Eventos</h3>
             <p>Registros por equipo</p>
@@ -253,10 +294,24 @@ const DashboardCharts = ({
               }} 
             />
           </div>
+          {expandedChart === 'eventos' && (
+            <button 
+              className="chart-close-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedChart(null);
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
 
         {/* Gráfico de Distribución de Equipos */}
-        <div className="chart-container">
+        <div 
+          className={`chart-container ${expandedChart === 'equipos' ? 'expanded' : ''}`}
+          onClick={() => toggleChartExpansion('equipos')}
+        >
           <div className="chart-header">
             <h3>Distribución por Estado</h3>
             <p>Estado actual de equipos</p>
@@ -294,6 +349,17 @@ const DashboardCharts = ({
               }} 
             />
           </div>
+          {expandedChart === 'equipos' && (
+            <button 
+              className="chart-close-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedChart(null);
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
 
       </div>

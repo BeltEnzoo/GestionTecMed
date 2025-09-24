@@ -11,6 +11,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
+import Logo from "./Logo";
 import "./Layout.css";
 
 const Layout = ({ children }) => {
@@ -66,9 +67,12 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h1 className="sidebar-title">
-            🏥Tec. Médica
-          </h1>
+          <div className="sidebar-title-container">
+            <Logo size={32} className="sidebar-logo" />
+            <h1 className="sidebar-title">
+              Tec. Médica
+            </h1>
+          </div>
           <button
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600"
             onClick={closeSidebar}
