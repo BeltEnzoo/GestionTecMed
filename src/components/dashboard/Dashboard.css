@@ -274,3 +274,125 @@
     padding: 2rem;
   }
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .dashboard-header {
+    margin-bottom: 1rem;
+    text-align: left;
+    padding-left: 4rem; /* Solo el header se mueve para evitar el botón hamburguesa */
+  }
+  
+  .dashboard-title {
+    font-size: 1.25rem;
+  }
+  
+  .dashboard-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stat-card-content {
+    padding: 1rem;
+  }
+  
+  .stat-card-inner {
+    gap: 0.75rem;
+  }
+  
+  .stat-icon-wrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .stat-icon {
+    height: 1.25rem;
+    width: 1.25rem;
+    color: white !important;
+    fill: none !important;
+    stroke: white !important;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .activity-section {
+    margin-top: 1rem;
+  }
+  
+  .activity-card-content {
+    padding: 1rem;
+  }
+  
+  .activity-title {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .activity-list {
+    gap: 0.5rem;
+  }
+  
+  .activity-text {
+    font-size: 0.8rem;
+  }
+  
+  .activity-time {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding-left: 4.5rem; /* Un poco más de espacio en móvil pequeño */
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .stat-card-content {
+    padding: 0.875rem;
+  }
+  
+  .stat-card-inner {
+    gap: 0.5rem;
+  }
+  
+  .stat-icon-wrapper {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .stat-icon {
+    height: 1rem;
+    width: 1rem;
+  }
+  
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .activity-card-content {
+    padding: 0.75rem;
+  }
+}

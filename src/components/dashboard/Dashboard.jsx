@@ -188,7 +188,7 @@ const Dashboard = () => {
     return (
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1 className="dashboard-title">Dashboard</h1>
+          <h1 className="dashboard-title">Inicio</h1>
           <p className="dashboard-subtitle">
             Cargando datos...
           </p>

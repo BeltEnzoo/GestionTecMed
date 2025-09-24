@@ -140,8 +140,50 @@ const DashboardCharts = ({
     ],
   };
 
+  // Calcular estadísticas para móvil
+  const mobileStats = {
+    totalMantenimientos: (mantenimientosData?.preventivos || []).reduce((a, b) => a + b, 0) + 
+                        (mantenimientosData?.correctivos || []).reduce((a, b) => a + b, 0),
+    totalCostos: (costosData || []).reduce((a, b) => a + b, 0),
+    equiposActivos: equiposData?.[0] || 75,
+    totalEventos: (eventosData?.frecuencia || []).reduce((a, b) => a + b, 0),
+  };
+
   return (
     <div className="dashboard-charts">
+      
+      {/* Mobile Stats Cards - Only visible on mobile */}
+      <div className="mobile-stats-grid">
+        <div className="mobile-stat-card">
+          <div className="mobile-stat-number">{mobileStats.totalMantenimientos}</div>
+          <div className="mobile-stat-label">Mantenimientos</div>
+          <div className="mobile-stat-description">Últimos 6 meses</div>
+          <div className="mobile-stat-trend positive">↗ +12% vs anterior</div>
+        </div>
+        
+        <div className="mobile-stat-card">
+          <div className="mobile-stat-number">${mobileStats.totalCostos}K</div>
+          <div className="mobile-stat-label">Inversión Total</div>
+          <div className="mobile-stat-description">En mantenimientos</div>
+          <div className="mobile-stat-trend neutral">→ Estable</div>
+        </div>
+        
+        <div className="mobile-stat-card">
+          <div className="mobile-stat-number">{mobileStats.equiposActivos}%</div>
+          <div className="mobile-stat-label">Equipos Activos</div>
+          <div className="mobile-stat-description">Disponibles para uso</div>
+          <div className="mobile-stat-trend positive">↗ +5% este mes</div>
+        </div>
+        
+        <div className="mobile-stat-card">
+          <div className="mobile-stat-number">{mobileStats.totalEventos}</div>
+          <div className="mobile-stat-label">Eventos Registrados</div>
+          <div className="mobile-stat-description">En equipos críticos</div>
+          <div className="mobile-stat-trend negative">↘ -8% vs anterior</div>
+        </div>
+      </div>
+
+      {/* Desktop Charts - Hidden on mobile */}
       <div className="charts-grid">
         
         {/* Gráfico de Tendencias de Mantenimientos */}

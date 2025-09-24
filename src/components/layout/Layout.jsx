@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
 
   // Navegación base para todos los usuarios
   const baseNavigation = [
-    { name: "Dashboard", href: "/", icon: HomeIcon },
+    { name: "Inicio", href: "/", icon: HomeIcon },
     { name: "Equipos", href: "/equipos", icon: CpuChipIcon },
     { name: "Mantenimientos", href: "/mantenimientos", icon: WrenchScrewdriverIcon },
     { name: "Reportes", href: "/reportes", icon: ChartBarIcon },

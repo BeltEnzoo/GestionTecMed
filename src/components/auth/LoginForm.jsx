@@ -4,7 +4,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { debugLogin } from '../../utils/debugLogin'
 import { testDirectQuery } from '../../utils/testDirectQuery'
+import MedicalCarousel from './MedicalCarousel'
 import './LoginForm.css'
+import './MedicalCarousel.css'
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -46,10 +48,11 @@ const LoginForm = () => {
 
   return (
     <div className="login-container">
+      <MedicalCarousel />
       <div className="login-card">
         <div className="login-header">
           <h1 className="login-title">🏥 Gestión Equipamiento Médico</h1>
-          <p className="login-subtitle">Iniciar sesión</p>
+          <p className="login-subtitle">Acceso al Sistema de Gestión</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -116,7 +119,7 @@ const LoginForm = () => {
 
           <div className="login-footer">
             <p className="login-info">
-              Acceso restringido al personal autorizado
+              🔒 Acceso restringido al personal autorizado
             </p>
           </div>
         </form>
