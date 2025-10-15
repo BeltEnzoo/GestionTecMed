@@ -151,7 +151,7 @@ const DashboardCharts = ({
     totalMantenimientos: (mantenimientosData?.preventivos || []).reduce((a, b) => a + b, 0) + 
                         (mantenimientosData?.correctivos || []).reduce((a, b) => a + b, 0),
     totalCostos: (costosData || []).reduce((a, b) => a + b, 0),
-    equiposActivos: equiposData?.[0] || 75,
+    equiposActivos: equiposData?.[0] || 0,
     totalEventos: (eventosData?.frecuencia || []).reduce((a, b) => a + b, 0),
   };
 
@@ -322,7 +322,7 @@ const DashboardCharts = ({
                 labels: ['Activos', 'Mantenimiento', 'Fuera de Servicio'],
                 datasets: [
                   {
-                    data: equiposData || [75, 15, 10],
+                    data: equiposData || [0, 0, 0],
                     backgroundColor: [
                       'rgba(34, 197, 94, 0.8)',
                       'rgba(245, 158, 11, 0.8)',

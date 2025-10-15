@@ -136,17 +136,23 @@ const Dashboard = () => {
     try {
       // Datos de mantenimientos por tipo (últimos 6 meses)
       const mantenimientosPorTipo = {
-        preventivos: [12, 19, 3, 5, 2, 3], // Datos simulados
+        preventivos: [12, 19, 3, 5, 2, 3], // Datos simulados - TODO: implementar datos reales
         correctivos: [2, 3, 20, 5, 1, 4]
       };
       setMantenimientosData(mantenimientosPorTipo);
 
       // Datos de equipos por estado
       const equiposPorEstado = [
-        equipos?.filter(e => e.estado === 'activo').length || 75,
-        equipos?.filter(e => e.estado === 'mantenimiento').length || 15,
-        equipos?.filter(e => e.estado === 'fuera_servicio').length || 10
+        equipos?.filter(e => e.estado === 'activo').length || 0,
+        equipos?.filter(e => e.estado === 'mantenimiento').length || 0,
+        equipos?.filter(e => e.estado === 'fuera-servicio').length || 0
       ];
+      
+      // Debug: mostrar datos de equipos
+      console.log('Total equipos:', equipos?.length || 0);
+      console.log('Equipos por estado:', equiposPorEstado);
+      console.log('Estados únicos:', [...new Set(equipos?.map(e => e.estado))]);
+      
       setEquiposData(equiposPorEstado);
 
       // Datos de costos por departamento (simulados)
