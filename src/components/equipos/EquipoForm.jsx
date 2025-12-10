@@ -165,6 +165,22 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
         valorActual: equipo.valor_actual || "",
         notas: equipo.notas || ""
       });
+      
+      // Cargar archivos existentes del equipo
+      if (equipo.archivos && Array.isArray(equipo.archivos)) {
+        const existingFiles = equipo.archivos.map((file, index) => ({
+          id: `existing-${index}-${Date.now()}`,
+          file: null, // No es un File object, es un archivo ya subido
+          name: file.name || 'Archivo',
+          type: file.type || 'application/octet-stream',
+          size: file.size || 0,
+          url: file.url || null,
+          path: file.path || null
+        }));
+        setUploadedFiles(existingFiles);
+      } else {
+        setUploadedFiles([]);
+      }
     } else {
       // Resetear a valores por defecto para nuevo equipo
       reset({
@@ -181,6 +197,7 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
         responsable: "",
         departamento: "",
       });
+      setUploadedFiles([]);
     }
   }, [equipo, reset]);
 
@@ -720,22 +737,54 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                 {uploadedFiles.length > 0 && (
                   <div className="equipo-form-files-list">
                     <h4 className="equipo-form-files-title">Archivos Subidos:</h4>
-                    {uploadedFiles.map((file) => (
-                      <div key={file.id} className="equipo-form-file-item">
-                        <DocumentIcon className="h-4 w-4" />
-                        <span className="equipo-form-file-name">{file.name}</span>
-                        <span className="equipo-form-file-size">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(file.id)}
-                          className="equipo-form-file-remove"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
+                    {uploadedFiles.map((file) => {
+                      const isImage = file.type?.startsWith('image/') || file.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                      return (
+                        <div key={file.id} className="equipo-form-file-item">
+                          {isImage && file.url ? (
+                            <img 
+                              src={file.url} 
+                              alt={file.name} 
+                              className="equipo-form-file-preview"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                if (e.target.nextSibling) {
+                                  e.target.nextSibling.style.display = 'block';
+                                }
+                              }}
+                            />
+                          ) : null}
+                          {!isImage || !file.url ? (
+                            <DocumentIcon className="h-4 w-4" />
+                          ) : null}
+                          <span className="equipo-form-file-name" title={file.name}>
+                            {file.name}
+                          </span>
+                          <span className="equipo-form-file-size">
+                            {file.size > 0 ? `${(file.size / 1024).toFixed(1)} KB` : 'N/A'}
+                          </span>
+                          {file.url && (
+                            <a 
+                              href={file.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="equipo-form-file-view"
+                              title="Ver archivo"
+                            >
+                              📄
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeFile(file.id)}
+                            className="equipo-form-file-remove"
+                            title="Eliminar archivo"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 

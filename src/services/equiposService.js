@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase'
+import { uploadMultipleFiles, deleteFileFromStorage } from '../utils/fileUpload'
 
 // Tabla de equipos
 const EQUIPOS_TABLE = 'equipos'
@@ -167,27 +168,120 @@ export const equiposService = {
   // Crear un nuevo equipo
   async create(equipoData) {
     try {
-      const mappedData = mapFormFieldsToDBColumns(equipoData)
+      // Separar archivos del resto de los datos
+      const filesToUpload = equipoData.archivos?.filter(f => f.file instanceof File) || []
+      const existingFiles = equipoData.archivos?.filter(f => f.url || f.path) || []
       
+      // Primero insertar el equipo para obtener el ID
+      const mappedDataWithoutFiles = { ...mapFormFieldsToDBColumns(equipoData), archivos: existingFiles }
       
-      const { data, error } = await supabase
+      const { data: newEquipo, error: insertError } = await supabase
         .from(EQUIPOS_TABLE)
-        .insert([mappedData])
+        .insert([mappedDataWithoutFiles])
         .select()
         .single()
       
-      if (error) throw error
-      return { data, error: null }
+      if (insertError) throw insertError
+
+      // Si hay archivos para subir, subirlos ahora que tenemos el ID
+      let uploadedFiles = [...existingFiles]
+      if (filesToUpload.length > 0 && newEquipo?.id) {
+        const uploadResults = await uploadMultipleFiles(filesToUpload, newEquipo.id.toString())
+        
+        // Filtrar solo los archivos que se subieron correctamente
+        uploadedFiles = [
+          ...existingFiles,
+          ...uploadResults
+            .filter(result => result.url && !result.error)
+            .map(result => ({
+              url: result.url,
+              path: result.path,
+              name: result.name,
+              type: result.type,
+              size: result.size
+            }))
+        ]
+
+        // Actualizar el equipo con las URLs de los archivos subidos
+        if (uploadedFiles.length > existingFiles.length) {
+          const { data: updatedEquipo, error: updateError } = await supabase
+            .from(EQUIPOS_TABLE)
+            .update({ archivos: uploadedFiles })
+            .eq('id', newEquipo.id)
+            .select()
+            .single()
+          
+          if (updateError) {
+            console.error('Error updating equipo with files:', updateError)
+            // No lanzamos error aquí porque el equipo ya se creó, solo los archivos fallaron
+          } else {
+            return { data: updatedEquipo, error: null }
+          }
+        }
+      }
+      
+      return { data: { ...newEquipo, archivos: uploadedFiles }, error: null }
     } catch (error) {
       console.error('Error creating equipo:', error)
-      return { data: null, error }
+      return { data: null, error: error.message || error }
     }
   },
 
   // Actualizar un equipo
   async update(id, equipoData) {
     try {
-      const mappedData = mapFormFieldsToDBColumns(equipoData)
+      // Separar archivos nuevos de los existentes
+      const filesToUpload = equipoData.archivos?.filter(f => f.file instanceof File) || []
+      const existingFiles = equipoData.archivos?.filter(f => f.url || f.path) || []
+      
+      // Obtener el equipo actual para comparar archivos
+      const { data: currentEquipo } = await supabase
+        .from(EQUIPOS_TABLE)
+        .select('archivos')
+        .eq('id', id)
+        .single()
+      
+      // Determinar qué archivos se eliminaron
+      const currentFiles = currentEquipo?.archivos || []
+      const filesToDelete = currentFiles.filter(
+        currentFile => !existingFiles.some(existingFile => 
+          existingFile.path === currentFile.path || existingFile.url === currentFile.url
+        )
+      )
+      
+      // Eliminar archivos que ya no están en la lista
+      if (filesToDelete.length > 0) {
+        await Promise.all(
+          filesToDelete.map(file => {
+            if (file.path) {
+              return deleteFileFromStorage(file.path)
+            }
+            return Promise.resolve({ success: true })
+          })
+        )
+      }
+      
+      // Subir nuevos archivos
+      let uploadedFiles = [...existingFiles]
+      if (filesToUpload.length > 0) {
+        const uploadResults = await uploadMultipleFiles(filesToUpload, id.toString())
+        
+        uploadedFiles = [
+          ...existingFiles,
+          ...uploadResults
+            .filter(result => result.url && !result.error)
+            .map(result => ({
+              url: result.url,
+              path: result.path,
+              name: result.name,
+              type: result.type,
+              size: result.size
+            }))
+        ]
+      }
+      
+      // Actualizar el equipo con los nuevos datos
+      const mappedData = mapFormFieldsToDBColumns({ ...equipoData, archivos: uploadedFiles })
       const { data, error } = await supabase
         .from(EQUIPOS_TABLE)
         .update(mappedData)
@@ -199,7 +293,7 @@ export const equiposService = {
       return { data, error: null }
     } catch (error) {
       console.error('Error updating equipo:', error)
-      return { data: null, error }
+      return { data: null, error: error.message || error }
     }
   },
 
