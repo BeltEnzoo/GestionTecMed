@@ -4,6 +4,9 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
+  XCircleIcon,
+  WrenchScrewdriverIcon,
+  CalendarIcon,
 } from "@heroicons/react/24/outline";
 import { supabase } from "../../services/supabase";
 import DashboardCharts from "./DashboardCharts";
@@ -66,20 +69,47 @@ const Dashboard = () => {
 
       if (mantenimientosError) throw mantenimientosError;
 
-      // Calcular estadísticas
+      // Calcular estadísticas con normalización de estados
       const totalEquipos = equipos?.length || 0;
-      const equiposActivos = equipos?.filter(e => e.estado === 'activo').length || 0;
-      const mantenimientosPendientes = mantenimientos?.filter(m => m.estado === 'programado').length || 0;
+      
+      // Normalizar estados (convertir a minúsculas y manejar variaciones)
+      const normalizarEstado = (estado) => {
+        if (!estado) return '';
+        const estadoLower = estado.toLowerCase().trim();
+        // Mapear posibles variaciones
+        if (estadoLower === 'activo' || estadoLower === 'disponible') return 'activo';
+        if (estadoLower === 'mantenimiento' || estadoLower === 'en mantenimiento') return 'mantenimiento';
+        if (estadoLower === 'fuera-servicio' || estadoLower === 'fuera de servicio' || estadoLower === 'fuera_de_servicio') return 'fuera-servicio';
+        return estadoLower;
+      };
+
+      const equiposActivos = equipos?.filter(e => normalizarEstado(e.estado) === 'activo').length || 0;
+      const equiposMantenimiento = equipos?.filter(e => normalizarEstado(e.estado) === 'mantenimiento').length || 0;
+      const equiposFueraServicio = equipos?.filter(e => normalizarEstado(e.estado) === 'fuera-servicio').length || 0;
+      
+      // Debug: verificar estados reales
+      console.log('Estados únicos en BD:', [...new Set(equipos?.map(e => e.estado))]);
+      console.log('Equipos activos encontrados:', equiposActivos);
+      console.log('Equipos en mantenimiento:', equiposMantenimiento);
+      console.log('Equipos fuera de servicio:', equiposFueraServicio);
+      
+      const mantenimientosPendientes = mantenimientos?.filter(m => {
+        const estadoNormalizado = (m.estado || '').toLowerCase().trim();
+        return estadoNormalizado === 'programado' || estadoNormalizado === 'pendiente';
+      }).length || 0;
       
       // Próximos mantenimientos (en los próximos 7 días)
       const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0); // Normalizar a inicio del día
       const proximosMantenimientos = mantenimientos?.filter(m => {
+        if (!m.fecha_programada) return false;
         const fechaProgramada = new Date(m.fecha_programada);
+        fechaProgramada.setHours(0, 0, 0, 0);
         const diasDiferencia = Math.ceil((fechaProgramada - hoy) / (1000 * 60 * 60 * 24));
         return diasDiferencia >= 0 && diasDiferencia <= 7;
       }).length || 0;
 
-      // Actualizar estadísticas
+      // Actualizar estadísticas (6 tarjetas como en la imagen)
       setStats([
         {
           name: "Total Equipos",
@@ -88,22 +118,34 @@ const Dashboard = () => {
           color: "bg-blue-500",
         },
         {
-          name: "Mantenimientos Pendientes",
-          value: mantenimientosPendientes.toString(),
-          icon: ExclamationTriangleIcon,
-          color: "bg-yellow-500",
-        },
-        {
           name: "Equipos Activos",
           value: equiposActivos.toString(),
           icon: CheckCircleIcon,
           color: "bg-green-500",
         },
         {
+          name: "En Mantenimiento",
+          value: equiposMantenimiento.toString(),
+          icon: WrenchScrewdriverIcon,
+          color: "bg-yellow-500",
+        },
+        {
+          name: "Fuera de Servicio",
+          value: equiposFueraServicio.toString(),
+          icon: XCircleIcon,
+          color: "bg-red-500",
+        },
+        {
+          name: "Mantenimientos Pendientes",
+          value: mantenimientosPendientes.toString(),
+          icon: ExclamationTriangleIcon,
+          color: "bg-purple-500",
+        },
+        {
           name: "Próximos Mantenimientos",
           value: proximosMantenimientos.toString(),
-          icon: ClockIcon,
-          color: "bg-purple-500",
+          icon: CalendarIcon,
+          color: "bg-pink-500",
         },
       ]);
 
@@ -155,9 +197,77 @@ const Dashboard = () => {
       
       setEquiposData(equiposPorEstado);
 
-      // Datos de costos por departamento (simulados)
-      const costosPorDepto = [45, 32, 28, 15, 22];
-      setCostosData(costosPorDepto);
+      // Calcular costos reales por departamento
+      const costosPorDepartamento = {};
+      
+      if (mantenimientos && mantenimientos.length > 0 && equipos && equipos.length > 0) {
+        // Crear un mapa de equipos por ID para acceso rápido
+        const equiposMap = {};
+        equipos.forEach(equipo => {
+          equiposMap[equipo.id] = equipo;
+        });
+
+        // Calcular costos por departamento desde los mantenimientos
+        mantenimientos.forEach(mantenimiento => {
+          if (mantenimiento.equipo_id) {
+            const equipo = equiposMap[mantenimiento.equipo_id];
+            if (equipo && equipo.departamento) {
+              const depto = equipo.departamento;
+              
+              // Si el mantenimiento tiene costo, usarlo; sino, usar costo promedio del equipo
+              let costo = mantenimiento.costo || 0;
+              
+              // Si no hay costo en el mantenimiento, usar el costo promedio del equipo
+              if (!costo && equipo.costo_promedio_mantenimiento) {
+                costo = equipo.costo_promedio_mantenimiento;
+              }
+              
+              // Agregar al acumulador del departamento
+              if (!costosPorDepartamento[depto]) {
+                costosPorDepartamento[depto] = 0;
+              }
+              costosPorDepartamento[depto] += parseFloat(costo) || 0;
+            }
+          }
+        });
+
+        // También considerar equipos que tienen costo promedio pero sin mantenimientos registrados
+        equipos.forEach(equipo => {
+          if (equipo.departamento && equipo.costo_promedio_mantenimiento) {
+            // Verificar si ya hay mantenimientos para este equipo
+            const tieneMantenimientos = mantenimientos.some(m => m.equipo_id === equipo.id);
+            
+            // Si no tiene mantenimientos registrados, pero tiene costo promedio, agregar un valor estimado
+            // Solo si el departamento no tiene costos aún o queremos incluir un estimado
+            if (!tieneMantenimientos) {
+              // Opcional: agregar costo estimado basado en equipos sin mantenimientos
+              // Por ahora no lo hacemos para evitar duplicar costos
+            }
+          }
+        });
+      }
+
+      // Convertir a arrays para el gráfico (ordenar por costo descendente)
+      const departamentosOrdenados = Object.entries(costosPorDepartamento)
+        .sort((a, b) => b[1] - a[1]) // Ordenar por costo descendente
+        .slice(0, 5); // Top 5 departamentos
+
+      const labelsDeptos = departamentosOrdenados.map(([depto]) => depto || 'Sin departamento');
+      const valoresCostos = departamentosOrdenados.map(([, costo]) => {
+        // Convertir a miles para mostrar mejor en el gráfico
+        return parseFloat((costo / 1000).toFixed(1));
+      });
+
+      // Si no hay datos, mostrar valores vacíos
+      if (labelsDeptos.length === 0) {
+        labelsDeptos.push('Sin datos');
+        valoresCostos.push(0);
+      }
+
+      setCostosData({
+        labels: labelsDeptos,
+        valores: valoresCostos
+      });
 
       // Obtener eventos por equipo
       const { data: eventos, error: eventosError } = await supabase

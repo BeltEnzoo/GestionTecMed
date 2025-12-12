@@ -100,25 +100,29 @@ const DashboardCharts = ({
 
   // Datos para gráfico de costos por departamento
   const costosChartData = {
-    labels: ['UTI', 'Emergencias', 'Cirugía', 'Cardiología', 'Neurología'],
+    labels: costosData?.labels || ['Sin datos'],
     datasets: [
       {
         label: 'Costos (Miles $)',
-        data: costosData || [45, 32, 28, 15, 22],
+        data: costosData?.valores || [0],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
           'rgba(245, 158, 11, 0.8)',
           'rgba(239, 68, 68, 0.8)',
           'rgba(139, 92, 246, 0.8)',
-        ],
+          'rgba(236, 72, 153, 0.8)',
+          'rgba(14, 165, 233, 0.8)',
+        ].slice(0, costosData?.labels?.length || 1),
         borderColor: [
           'rgba(59, 130, 246, 1)',
           'rgba(16, 185, 129, 1)',
           'rgba(245, 158, 11, 1)',
           'rgba(239, 68, 68, 1)',
           'rgba(139, 92, 246, 1)',
-        ],
+          'rgba(236, 72, 153, 1)',
+          'rgba(14, 165, 233, 1)',
+        ].slice(0, costosData?.labels?.length || 1),
         borderWidth: 2,
       },
     ],
@@ -150,7 +154,7 @@ const DashboardCharts = ({
   const mobileStats = {
     totalMantenimientos: (mantenimientosData?.preventivos || []).reduce((a, b) => a + b, 0) + 
                         (mantenimientosData?.correctivos || []).reduce((a, b) => a + b, 0),
-    totalCostos: (costosData || []).reduce((a, b) => a + b, 0),
+    totalCostos: (costosData?.valores || []).reduce((a, b) => a + b, 0),
     equiposActivos: equiposData?.[0] || 0,
     totalEventos: (eventosData?.frecuencia || []).reduce((a, b) => a + b, 0),
   };

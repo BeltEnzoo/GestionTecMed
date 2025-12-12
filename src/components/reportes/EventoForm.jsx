@@ -164,11 +164,28 @@ const EventoForm = ({ evento, onClose, onSuccess }) => {
                 className={`form-select ${errors.equipo ? 'error' : ''}`}
               >
                 <option value="">Seleccionar equipo</option>
-                {equipos.map(equipo => (
-                  <option key={equipo.id} value={equipo.id}>
-                    {equipo.nombre} - {equipo.codigoInterno}
-                  </option>
-                ))}
+                {equipos.map(equipo => {
+                  // Manejar ambos formatos: con mapeo (edificio/sala) o sin mapeo (edificio_/sala_)
+                  const edificio = equipo.edificio || equipo.edificio_ || null;
+                  const sala = equipo.sala || equipo.sala_ || null;
+                  const codigoInterno = equipo.codigoInterno || equipo.codigo_interno || null;
+                  
+                  // Construir texto de ubicación
+                  const ubicacion = [];
+                  if (edificio) ubicacion.push(edificio);
+                  if (sala) ubicacion.push(sala);
+                  const textoUbicacion = ubicacion.length > 0 ? ` (${ubicacion.join(' - ')})` : '';
+                  
+                  // Mostrar nombre con ubicación si existe, sino con código interno
+                  const textoDisplay = (equipo.nombre || 'Sin nombre') 
+                    + (textoUbicacion || (codigoInterno ? ` - ${codigoInterno}` : ''));
+                  
+                  return (
+                    <option key={equipo.id} value={equipo.id}>
+                      {textoDisplay}
+                    </option>
+                  );
+                })}
               </select>
               {errors.equipo && (
                 <span className="form-error">{errors.equipo.message}</span>

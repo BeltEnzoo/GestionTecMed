@@ -207,7 +207,9 @@ const EquiposList = () => {
                   </div>
                 </td>
                 <td>
-                  {equipo.sala}
+                  {equipo.edificio && equipo.sala 
+                    ? `${equipo.edificio} - ${equipo.sala}`
+                    : equipo.edificio || equipo.sala || 'Sin ubicación'}
                 </td>
                 <td>
                   <span className={getEstadoColor(equipo.estado)}>
@@ -283,7 +285,11 @@ const EquiposList = () => {
               <div className="equipos-mobile-card-body">
                 <div className="equipos-mobile-card-field">
                   <div className="equipos-mobile-card-label">Ubicación</div>
-                  <div className="equipos-mobile-card-value">{equipo.sala}</div>
+                  <div className="equipos-mobile-card-value">
+                    {equipo.edificio && equipo.sala 
+                      ? `${equipo.edificio} - ${equipo.sala}`
+                      : equipo.edificio || equipo.sala || 'Sin ubicación'}
+                  </div>
                 </div>
                 <div className="equipos-mobile-card-field">
                   <div className="equipos-mobile-card-label">Antigüedad</div>

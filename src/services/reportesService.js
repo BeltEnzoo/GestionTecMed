@@ -26,10 +26,21 @@ export const reportesService = {
       const equiposData = equipos || []
       const mantenimientosData = mantenimientos || []
 
+      // Función para normalizar estados
+      const normalizarEstado = (estado) => {
+        if (!estado) return '';
+        const estadoLower = estado.toLowerCase().trim();
+        // Mapear posibles variaciones
+        if (estadoLower === 'activo' || estadoLower === 'disponible') return 'activo';
+        if (estadoLower === 'mantenimiento' || estadoLower === 'en mantenimiento') return 'mantenimiento';
+        if (estadoLower === 'fuera-servicio' || estadoLower === 'fuera de servicio' || estadoLower === 'fuera_de_servicio') return 'fuera-servicio';
+        return estadoLower;
+      };
+
       const totalEquipos = equiposData.length
-      const equiposActivos = equiposData.filter(e => e.estado === 'Activo').length
-      const equiposFueraServicio = equiposData.filter(e => e.estado === 'Fuera de Servicio').length
-      const equiposMantenimiento = equiposData.filter(e => e.estado === 'En Mantenimiento').length
+      const equiposActivos = equiposData.filter(e => normalizarEstado(e.estado) === 'activo').length
+      const equiposFueraServicio = equiposData.filter(e => normalizarEstado(e.estado) === 'fuera-servicio').length
+      const equiposMantenimiento = equiposData.filter(e => normalizarEstado(e.estado) === 'mantenimiento').length
 
       // Distribución por tipo
       const distribucionTipo = equiposData.reduce((acc, equipo) => {
@@ -45,16 +56,22 @@ export const reportesService = {
         return acc
       }, {})
 
-      // Mantenimientos pendientes
-      const mantenimientosPendientes = mantenimientosData.filter(m => m.estado === 'Pendiente').length
+      // Mantenimientos pendientes (normalizar estado)
+      const mantenimientosPendientes = mantenimientosData.filter(m => {
+        const estadoNormalizado = (m.estado || '').toLowerCase().trim();
+        return estadoNormalizado === 'programado' || estadoNormalizado === 'pendiente';
+      }).length
 
-      // Próximos mantenimientos (en los próximos 30 días)
+      // Próximos mantenimientos (en los próximos 7 días)
       const hoy = new Date()
-      const en30Dias = new Date(hoy.getTime() + 30 * 24 * 60 * 60 * 1000)
+      hoy.setHours(0, 0, 0, 0) // Normalizar a inicio del día
+      const en7Dias = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000)
       const proximosMantenimientos = mantenimientosData.filter(m => {
         if (!m.fecha_programada) return false
         const fecha = new Date(m.fecha_programada)
-        return fecha >= hoy && fecha <= en30Dias
+        fecha.setHours(0, 0, 0, 0)
+        const diasDiferencia = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24))
+        return diasDiferencia >= 0 && diasDiferencia <= 7
       }).length
 
       return {

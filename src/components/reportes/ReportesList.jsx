@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import { useReportes } from '../../hooks/useReportes'
-import { useHistorial } from '../../hooks/useHistorial'
-import EventoForm from './EventoForm'
 import ExportButtons from './ExportButtons'
 import { 
   ChartBarIcon, 
@@ -11,10 +9,7 @@ import {
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
-  WrenchScrewdriverIcon,
-  PlusIcon,
-  DocumentTextIcon,
-  EyeIcon
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline'
 import './ReportesList.css'
 import './ExportButtons.css'
@@ -35,11 +30,6 @@ const ReportesList = () => {
   const [fechaInicio, setFechaInicio] = useState('')
   const [fechaFin, setFechaFin] = useState('')
   const [reporteGenerado, setReporteGenerado] = useState(false)
-  const [showEventoForm, setShowEventoForm] = useState(false)
-  const [eventoToEdit, setEventoToEdit] = useState(null)
-  const [showHistorial, setShowHistorial] = useState(false)
-
-  const { eventos, cargarEventos } = useHistorial()
 
   // Generar fechas por defecto (últimos 30 días) y cargar datos
   React.useEffect(() => {
@@ -51,7 +41,6 @@ const ReportesList = () => {
     
     // Cargar todos los datos al iniciar
     cargarTodosLosDatos()
-    cargarEventos()
     
     // Cargar mantenimientos por defecto (últimos 30 días)
     setTimeout(() => {
@@ -69,32 +58,6 @@ const ReportesList = () => {
     }
   }
 
-  const handleNuevoEvento = () => {
-    setEventoToEdit(null)
-    setShowEventoForm(true)
-  }
-
-  const handleEditarEvento = (evento) => {
-    setEventoToEdit(evento)
-    setShowEventoForm(true)
-  }
-
-  const handleEventoSuccess = () => {
-    cargarEventos()
-    cargarTodosLosDatos()
-  }
-
-  const handleCloseEventoForm = () => {
-    setShowEventoForm(false)
-    setEventoToEdit(null)
-  }
-
-  const toggleHistorial = () => {
-    setShowHistorial(!showHistorial)
-    if (!showHistorial) {
-      cargarEventos()
-    }
-  }
 
   const formatearMoneda = (cantidad) => {
     return new Intl.NumberFormat('es-AR', {
@@ -141,7 +104,7 @@ const ReportesList = () => {
       <ExportButtons 
         equipos={todosLosEquipos || []}
         mantenimientos={reporteMantenimientos || []}
-        eventos={eventos || []}
+        eventos={[]}
         equipoSeleccionado={null}
       />
 
@@ -409,112 +372,6 @@ const ReportesList = () => {
         </div>
       )}
 
-      {/* Gestión de Eventos */}
-      <div className="events-section">
-        <div className="events-header">
-          <h2 className="section-title">Registro de Eventos y Fallas</h2>
-          <div className="events-actions">
-            <button
-              onClick={toggleHistorial}
-              className="btn-secondary"
-            >
-              <EyeIcon className="btn-icon" />
-              {showHistorial ? 'Ocultar' : 'Ver'} Historial
-            </button>
-            <button
-              onClick={handleNuevoEvento}
-              className="btn-primary"
-            >
-              <PlusIcon className="btn-icon" />
-              Registrar Evento
-            </button>
-          </div>
-        </div>
-
-        {showHistorial && (
-          <div className="historial-container">
-            <div className="historial-header">
-              <h3>Historial de Eventos</h3>
-              <span className="eventos-count">{eventos.length} eventos registrados</span>
-            </div>
-            
-            {eventos.length === 0 ? (
-              <div className="empty-state">
-                <DocumentTextIcon className="empty-icon" />
-                <p>No hay eventos registrados</p>
-                <p className="empty-subtitle">Los eventos y fallas de equipos aparecerán aquí</p>
-              </div>
-            ) : (
-              <div className="eventos-list">
-                {eventos.map(evento => (
-                  <div key={evento.id} className="evento-card">
-                    <div className="evento-header">
-                      <div className="evento-info">
-                        <h4 className="evento-titulo">{evento.titulo}</h4>
-                        <div className="evento-meta">
-                          <span className="evento-equipo">
-                            {evento.equipos?.nombre || 'Equipo no encontrado'}
-                          </span>
-                          <span className="evento-fecha">
-                            {formatearFecha(evento.fechaEvento)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="evento-badges">
-                        <span className={`tipo-badge ${evento.tipoEvento.toLowerCase().replace(' ', '-')}`}>
-                          {evento.tipoEvento}
-                        </span>
-                        <span className={`prioridad-badge ${evento.prioridad.toLowerCase()}`}>
-                          {evento.prioridad}
-                        </span>
-                        <span className={`estado-badge ${evento.estado.toLowerCase().replace(' ', '-')}`}>
-                          {evento.estado}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {evento.descripcion && (
-                      <div className="evento-descripcion">
-                        <p>{evento.descripcion}</p>
-                      </div>
-                    )}
-                    
-                    <div className="evento-footer">
-                      <div className="evento-details">
-                        {evento.tecnicoResponsable && (
-                          <span className="evento-detail">
-                            <strong>Técnico:</strong> {evento.tecnicoResponsable}
-                          </span>
-                        )}
-                        {evento.costoReparacion && (
-                          <span className="evento-detail">
-                            <strong>Costo:</strong> {formatearMoneda(evento.costoReparacion)}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleEditarEvento(evento)}
-                        className="btn-edit"
-                      >
-                        Editar
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Formulario de Evento */}
-      {showEventoForm && (
-        <EventoForm
-          evento={eventoToEdit}
-          onClose={handleCloseEventoForm}
-          onSuccess={handleEventoSuccess}
-        />
-      )}
     </div>
   )
 }
