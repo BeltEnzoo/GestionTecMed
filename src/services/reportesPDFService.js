@@ -377,6 +377,194 @@ class ReportesPDFService {
     const nombreArchivo = `reporte_costos_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(nombreArchivo);
   }
+
+  // Generar reporte de stock/insumos completo
+  static async generarReporteStock(stockData) {
+    const doc = new jsPDF();
+    
+    // Configurar fuente
+    doc.setFont('helvetica');
+    
+    // Título del reporte
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REPORTE DE STOCK / INSUMOS', 105, 20, { align: 'center' });
+    
+    // Subtítulo
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Inventario Completo del Taller', 105, 30, { align: 'center' });
+    
+    // Fecha de generación
+    const fechaActual = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${fechaActual}`, 14, 40);
+    
+    // Estadísticas generales
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESUMEN GENERAL', 14, 55);
+    
+    const stock = Array.isArray(stockData) ? stockData : [];
+    const totalItems = stock.length;
+    
+    // Calcular estadísticas
+    const stockBajo = stock.filter(item => 
+      item.stock_minimo && item.cantidad <= item.stock_minimo
+    ).length;
+    
+    const stockVencido = stock.filter(item => {
+      if (!item.fecha_vencimiento) return false;
+      const fechaVenc = new Date(item.fecha_vencimiento);
+      return fechaVenc < new Date();
+    }).length;
+    
+    const stockPorVencer = stock.filter(item => {
+      if (!item.fecha_vencimiento) return false;
+      const fechaVenc = new Date(item.fecha_vencimiento);
+      const hoy = new Date();
+      const diasRestantes = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
+      return diasRestantes > 0 && diasRestantes <= 30;
+    }).length;
+    
+    // Calcular valor total del stock
+    const valorTotal = stock.reduce((sum, item) => {
+      const costo = parseFloat(item.costo_unitario) || 0;
+      const cantidad = parseFloat(item.cantidad) || 0;
+      return sum + (costo * cantidad);
+    }, 0);
+    
+    // Agrupar por categoría
+    const porCategoria = {};
+    stock.forEach(item => {
+      const cat = item.categoria || 'Sin categoría';
+      if (!porCategoria[cat]) {
+        porCategoria[cat] = 0;
+      }
+      porCategoria[cat]++;
+    });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Total de Items: ${totalItems}`, 14, 65);
+    doc.text(`Stock Bajo: ${stockBajo}`, 14, 72);
+    doc.text(`Stock Vencido: ${stockVencido}`, 14, 79);
+    doc.text(`Por Vencer (30 días): ${stockPorVencer}`, 14, 86);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Valor Total del Stock: $${valorTotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 14, 93);
+    
+    // Distribución por categoría
+    if (Object.keys(porCategoria).length > 0) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DISTRIBUCIÓN POR CATEGORÍA', 14, 105);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      let yPos = 115;
+      Object.entries(porCategoria).forEach(([categoria, cantidad]) => {
+        doc.text(`${categoria}: ${cantidad} items`, 14, yPos);
+        yPos += 7;
+      });
+    }
+    
+    // Tabla de stock completo
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    const startY = Object.keys(porCategoria).length > 0 ? 140 : 110;
+    doc.text('DETALLE COMPLETO DE STOCK', 14, startY);
+    
+    const tableData = stock.map(item => {
+      // Determinar estado
+      let estado = 'Normal';
+      if (item.stock_minimo && item.cantidad <= item.stock_minimo) {
+        estado = 'Stock Bajo';
+      } else if (item.fecha_vencimiento) {
+        const fechaVenc = new Date(item.fecha_vencimiento);
+        const hoy = new Date();
+        if (fechaVenc < hoy) {
+          estado = 'Vencido';
+        } else {
+          const diasRestantes = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
+          if (diasRestantes <= 30) {
+            estado = 'Por Vencer';
+          }
+        }
+      }
+      
+      // Formatear fecha de vencimiento
+      const fechaVenc = item.fecha_vencimiento 
+        ? new Date(item.fecha_vencimiento).toLocaleDateString('es-ES')
+        : '-';
+      
+      // Calcular valor total del item
+      const costoUnit = parseFloat(item.costo_unitario) || 0;
+      const cantidad = parseFloat(item.cantidad) || 0;
+      const valorTotal = (costoUnit * cantidad).toLocaleString('es-ES', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      });
+      
+      return [
+        item.nombre || 'Sin nombre',
+        item.categoria || 'Sin categoría',
+        `${parseFloat(item.cantidad).toFixed(2)} ${item.unidad_medida || 'unidades'}`,
+        item.ubicacion || '-',
+        item.proveedor || '-',
+        fechaVenc,
+        estado,
+        item.costo_unitario ? `$${costoUnit.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-',
+        `$${valorTotal}`
+      ];
+    });
+    
+    autoTable(doc, {
+      startY: startY + 5,
+      head: [['Nombre', 'Categoría', 'Cantidad', 'Ubicación', 'Proveedor', 'Vencimiento', 'Estado', 'Costo Unit.', 'Valor Total']],
+      body: tableData,
+      styles: {
+        fontSize: 7,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [59, 130, 246],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 20 },
+        8: { cellWidth: 25 }
+      },
+      margin: { left: 14, right: 14 },
+      pageBreak: 'auto',
+      didDrawPage: (data) => {
+        // Footer
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Página ${doc.internal.getNumberOfPages()}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+      }
+    });
+    
+    // Guardar el PDF
+    const nombreArchivo = `stock_insumos_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(nombreArchivo);
+  }
 }
 
 export default ReportesPDFService;

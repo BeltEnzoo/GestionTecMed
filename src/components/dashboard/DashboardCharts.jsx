@@ -9,10 +9,9 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement,
   Filler,
 } from 'chart.js';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -24,15 +23,13 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement,
   Filler
 );
 
 const DashboardCharts = ({ 
-  mantenimientosData, 
-  equiposData, 
-  costosData,
-  eventosData 
+  eventosData,
+  roturasData,
+  inversionData
 }) => {
   const [expandedChart, setExpandedChart] = useState(null);
   
@@ -48,115 +45,118 @@ const DashboardCharts = ({
     plugins: {
       legend: {
         position: 'top',
-      },
-      title: {
-        display: true,
-        font: {
-          family: 'Georgia, Times New Roman, Times, serif',
-          size: 16,
-          weight: 'bold'
+        labels: {
+          font: {
+            size: 12,
+            weight: '500'
+          },
+          padding: 15,
+          usePointStyle: true
         }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: '600'
+        },
+        bodyFont: {
+          size: 13
+        },
+        cornerRadius: 8
       }
     },
     scales: {
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        },
         ticks: {
           font: {
-            family: 'Georgia, Times New Roman, Times, serif'
-          }
+            size: 11
+          },
+          color: '#6b7280'
         }
       },
       x: {
+        grid: {
+          display: false
+        },
         ticks: {
           font: {
-            family: 'Georgia, Times New Roman, Times, serif'
-          }
+            size: 11
+          },
+          color: '#6b7280'
         }
       }
     }
   };
 
-  // Datos para gráfico de tendencias de mantenimientos
-  const mantenimientosChartData = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Preventivos',
-        data: mantenimientosData?.preventivos || [12, 19, 3, 5, 2, 3],
-        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-        borderColor: 'rgba(34, 197, 94, 1)',
-        borderWidth: 2,
-      },
-      {
-        label: 'Correctivos',
-        data: mantenimientosData?.correctivos || [2, 3, 20, 5, 1, 4],
-        backgroundColor: 'rgba(239, 68, 68, 0.8)',
-        borderColor: 'rgba(239, 68, 68, 1)',
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  // Datos para gráfico de costos por departamento
-  const costosChartData = {
-    labels: costosData?.labels || ['Sin datos'],
-    datasets: [
-      {
-        label: 'Costos (Miles $)',
-        data: costosData?.valores || [0],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(139, 92, 246, 0.8)',
-          'rgba(236, 72, 153, 0.8)',
-          'rgba(14, 165, 233, 0.8)',
-        ].slice(0, costosData?.labels?.length || 1),
-        borderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(16, 185, 129, 1)',
-          'rgba(245, 158, 11, 1)',
-          'rgba(239, 68, 68, 1)',
-          'rgba(139, 92, 246, 1)',
-          'rgba(236, 72, 153, 1)',
-          'rgba(14, 165, 233, 1)',
-        ].slice(0, costosData?.labels?.length || 1),
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  // Datos para gráfico de eventos por equipo
+  // Datos para gráfico de Eventos en el tiempo
   const eventosChartData = {
-    labels: eventosData?.equipos || ['Respirador MP86', 'Desfibrilador Zoll', 'Monitor Cardíaco'],
+    labels: eventosData?.labels || ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
     datasets: [
       {
-        label: 'Eventos (últimos 6 meses)',
-        data: eventosData?.frecuencia || [8, 12, 5],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-        ],
-        borderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(239, 68, 68, 1)',
-          'rgba(16, 185, 129, 1)',
-        ],
-        borderWidth: 2,
+        label: 'Cantidad de Eventos',
+        data: eventosData?.values || [0, 0, 0, 0, 0, 0],
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2
       },
     ],
   };
 
-  // Calcular estadísticas para móvil
-  const mobileStats = {
-    totalMantenimientos: (mantenimientosData?.preventivos || []).reduce((a, b) => a + b, 0) + 
-                        (mantenimientosData?.correctivos || []).reduce((a, b) => a + b, 0),
-    totalCostos: (costosData?.valores || []).reduce((a, b) => a + b, 0),
-    equiposActivos: equiposData?.[0] || 0,
-    totalEventos: (eventosData?.frecuencia || []).reduce((a, b) => a + b, 0),
+  // Datos para gráfico de Roturas (Mantenimientos Correctivos) en el tiempo
+  const roturasChartData = {
+    labels: roturasData?.labels || ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Mantenimientos Correctivos',
+        data: roturasData?.values || [0, 0, 0, 0, 0, 0],
+        borderColor: 'rgba(239, 68, 68, 1)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2
+      },
+    ],
+  };
+
+  // Datos para gráfico de Inversión (estructura preparada, sin datos aún)
+  const inversionChartData = {
+    labels: ['Insumos', 'Accesorios', 'Equipos Médicos'],
+    datasets: [
+      {
+        label: 'Inversión ($)',
+        data: inversionData?.values || [0, 0, 0],
+        backgroundColor: [
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(168, 85, 247, 0.8)',
+        ],
+        borderColor: [
+          'rgba(34, 197, 94, 1)',
+          'rgba(59, 130, 246, 1)',
+          'rgba(168, 85, 247, 1)',
+        ],
+        borderWidth: 2,
+        borderRadius: 8
+      },
+    ],
   };
 
   return (
@@ -166,122 +166,17 @@ const DashboardCharts = ({
         <div className="chart-overlay active" onClick={() => setExpandedChart(null)} />
       )}
       
-      {/* Mobile Stats Cards - Only visible on mobile */}
-      <div className="mobile-stats-grid">
-        <div className="mobile-stat-card">
-          <div className="mobile-stat-number">{mobileStats.totalMantenimientos}</div>
-          <div className="mobile-stat-label">Mantenimientos</div>
-          <div className="mobile-stat-description">Últimos 6 meses</div>
-          <div className="mobile-stat-trend positive">↗ +12% vs anterior</div>
-        </div>
-        
-        <div className="mobile-stat-card">
-          <div className="mobile-stat-number">${mobileStats.totalCostos}K</div>
-          <div className="mobile-stat-label">Inversión Total</div>
-          <div className="mobile-stat-description">En mantenimientos</div>
-          <div className="mobile-stat-trend neutral">→ Estable</div>
-        </div>
-        
-        <div className="mobile-stat-card">
-          <div className="mobile-stat-number">{mobileStats.equiposActivos}%</div>
-          <div className="mobile-stat-label">Equipos Activos</div>
-          <div className="mobile-stat-description">Disponibles para uso</div>
-          <div className="mobile-stat-trend positive">↗ +5% este mes</div>
-        </div>
-        
-        <div className="mobile-stat-card">
-          <div className="mobile-stat-number">{mobileStats.totalEventos}</div>
-          <div className="mobile-stat-label">Eventos Registrados</div>
-          <div className="mobile-stat-description">En equipos críticos</div>
-          <div className="mobile-stat-trend negative">↘ -8% vs anterior</div>
-        </div>
-      </div>
-
-      {/* Desktop Charts - Hidden on mobile */}
+      {/* Desktop Charts */}
       <div className="charts-grid">
         
-        {/* Gráfico de Tendencias de Mantenimientos */}
-        <div 
-          className={`chart-container ${expandedChart === 'mantenimientos' ? 'expanded' : ''}`}
-          onClick={() => toggleChartExpansion('mantenimientos')}
-        >
-          <div className="chart-header">
-            <h3>Tendencias de Mantenimientos</h3>
-            <p>Últimos 6 meses</p>
-          </div>
-          <div className="chart-wrapper">
-            <Bar 
-              data={mantenimientosChartData} 
-              options={{
-                ...chartOptions,
-                plugins: {
-                  ...chartOptions.plugins,
-                  title: {
-                    ...chartOptions.plugins.title,
-                    text: 'Mantenimientos por Tipo'
-                  }
-                }
-              }} 
-            />
-          </div>
-          {expandedChart === 'mantenimientos' && (
-            <button 
-              className="chart-close-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpandedChart(null);
-              }}
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Gráfico de Costos por Departamento */}
-        <div 
-          className={`chart-container ${expandedChart === 'costos' ? 'expanded' : ''}`}
-          onClick={() => toggleChartExpansion('costos')}
-        >
-          <div className="chart-header">
-            <h3>Costos por Departamento</h3>
-            <p>Mantenimientos y reparaciones</p>
-          </div>
-          <div className="chart-wrapper">
-            <Bar 
-              data={costosChartData} 
-              options={{
-                ...chartOptions,
-                plugins: {
-                  ...chartOptions.plugins,
-                  title: {
-                    ...chartOptions.plugins.title,
-                    text: 'Inversión por Área'
-                  }
-                }
-              }} 
-            />
-          </div>
-          {expandedChart === 'costos' && (
-            <button 
-              className="chart-close-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpandedChart(null);
-              }}
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        {/* Gráfico de Eventos por Equipo */}
+        {/* Gráfico de Eventos */}
         <div 
           className={`chart-container ${expandedChart === 'eventos' ? 'expanded' : ''}`}
           onClick={() => toggleChartExpansion('eventos')}
         >
           <div className="chart-header">
-            <h3>Frecuencia de Eventos</h3>
-            <p>Registros por equipo</p>
+            <h3>Eventos</h3>
+            <p>Cantidad de eventos registrados en el tiempo</p>
           </div>
           <div className="chart-wrapper">
             <Line 
@@ -291,8 +186,7 @@ const DashboardCharts = ({
                 plugins: {
                   ...chartOptions.plugins,
                   title: {
-                    ...chartOptions.plugins.title,
-                    text: 'Actividad de Equipos'
+                    display: false
                   }
                 }
               }} 
@@ -311,49 +205,66 @@ const DashboardCharts = ({
           )}
         </div>
 
-        {/* Gráfico de Distribución de Equipos */}
+        {/* Gráfico de Roturas */}
         <div 
-          className={`chart-container ${expandedChart === 'equipos' ? 'expanded' : ''}`}
-          onClick={() => toggleChartExpansion('equipos')}
+          className={`chart-container ${expandedChart === 'roturas' ? 'expanded' : ''}`}
+          onClick={() => toggleChartExpansion('roturas')}
         >
           <div className="chart-header">
-            <h3>Distribución por Estado</h3>
-            <p>Estado actual de equipos</p>
+            <h3>Roturas</h3>
+            <p>Cantidad de mantenimientos correctivos en el tiempo</p>
           </div>
           <div className="chart-wrapper">
-            <Doughnut 
-              data={{
-                labels: ['Activos', 'Mantenimiento', 'Fuera de Servicio'],
-                datasets: [
-                  {
-                    data: equiposData || [0, 0, 0],
-                    backgroundColor: [
-                      'rgba(34, 197, 94, 0.8)',
-                      'rgba(245, 158, 11, 0.8)',
-                      'rgba(239, 68, 68, 0.8)',
-                    ],
-                    borderColor: [
-                      'rgba(34, 197, 94, 1)',
-                      'rgba(245, 158, 11, 1)',
-                      'rgba(239, 68, 68, 1)',
-                    ],
-                    borderWidth: 2,
-                  },
-                ],
-              }}
+            <Line 
+              data={roturasChartData} 
               options={{
                 ...chartOptions,
                 plugins: {
                   ...chartOptions.plugins,
                   title: {
-                    ...chartOptions.plugins.title,
-                    text: 'Estado de Equipos'
+                    display: false
                   }
                 }
               }} 
             />
           </div>
-          {expandedChart === 'equipos' && (
+          {expandedChart === 'roturas' && (
+            <button 
+              className="chart-close-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedChart(null);
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        {/* Gráfico de Inversión */}
+        <div 
+          className={`chart-container ${expandedChart === 'inversion' ? 'expanded' : ''}`}
+          onClick={() => toggleChartExpansion('inversion')}
+        >
+          <div className="chart-header">
+            <h3>Inversión</h3>
+            <p>Dinero invertido en insumos, accesorios y equipos médicos</p>
+          </div>
+          <div className="chart-wrapper">
+            <Bar 
+              data={inversionChartData} 
+              options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  title: {
+                    display: false
+                  }
+                }
+              }} 
+            />
+          </div>
+          {expandedChart === 'inversion' && (
             <button 
               className="chart-close-btn"
               onClick={(e) => {

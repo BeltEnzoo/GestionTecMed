@@ -8,6 +8,7 @@ import EquiposList from './components/equipos/EquiposList';
 import EquipoDetail from './components/equipos/EquipoDetail';
 import MantenimientosList from './components/mantenimientos/MantenimientosList';
 import EventosList from './components/eventos/EventosList';
+import StockList from './components/stock/StockList';
 import ReportesList from './components/reportes/ReportesList';
 import UsuariosList from './components/usuarios/UsuariosList';
 import LoginForm from './components/auth/LoginForm';
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/equipos/:id" element={<EquipoDetail />} />
                 <Route path="/mantenimientos" element={<MantenimientosList />} />
                 <Route path="/eventos" element={<EventosList />} />
+                <Route path="/stock" element={<StockList />} />
                 <Route path="/reportes" element={<ReportesList />} />
                 <Route path="/usuarios" element={
                   <ProtectedRoute requiredRole="Administrador">

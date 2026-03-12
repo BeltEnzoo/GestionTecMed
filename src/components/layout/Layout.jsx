@@ -10,6 +10,7 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon,
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
 import Logo from "./Logo";
@@ -26,6 +27,7 @@ const Layout = ({ children }) => {
     { name: "Equipos", href: "/equipos", icon: CpuChipIcon },
     { name: "Mantenimientos", href: "/mantenimientos", icon: WrenchScrewdriverIcon },
     { name: "Eventos", href: "/eventos", icon: ExclamationTriangleIcon },
+    { name: "Stock/Insumos", href: "/stock", icon: CubeIcon },
     { name: "Reportes", href: "/reportes", icon: ChartBarIcon },
   ];
 
