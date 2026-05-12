@@ -1,4 +1,5 @@
-/* Import global responsive styles FIRST */
+/* Design tokens, then global responsive styles */
+@import './styles/theme.css';
 @import './styles/global.css';
 @import './styles/responsive.css';
 

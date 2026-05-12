@@ -5,11 +5,12 @@ import {
   CpuChipIcon,
   WrenchScrewdriverIcon,
   ChartBarIcon,
+  UserGroupIcon,
   UserIcon,
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
-  ExclamationTriangleIcon,
+  BellAlertIcon,
   CubeIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
@@ -21,40 +22,45 @@ const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
 
-  // Navegación base para todos los usuarios
+  const isNavActive = (href) => {
+    if (href === "/") return location.pathname === "/";
+    return (
+      location.pathname === href ||
+      location.pathname.startsWith(`${href}/`)
+    );
+  };
+
   const baseNavigation = [
     { name: "Inicio", href: "/", icon: HomeIcon },
     { name: "Equipos", href: "/equipos", icon: CpuChipIcon },
     { name: "Mantenimientos", href: "/mantenimientos", icon: WrenchScrewdriverIcon },
-    { name: "Eventos", href: "/eventos", icon: ExclamationTriangleIcon },
-    { name: "Stock/Insumos", href: "/stock", icon: CubeIcon },
+    { name: "Eventos", href: "/eventos", icon: BellAlertIcon },
+    { name: "Stock / Insumos", href: "/stock", icon: CubeIcon },
     { name: "Reportes", href: "/reportes", icon: ChartBarIcon },
   ];
 
-  // Navegación completa (solo para Administradores)
   const adminNavigation = [
     ...baseNavigation,
-    { name: "Usuarios", href: "/usuarios", icon: UserIcon },
+    { name: "Usuarios", href: "/usuarios", icon: UserGroupIcon },
   ];
 
-  // Determinar qué navegación usar según el rol del usuario
-  const navigation = user?.rol === 'Administrador' ? adminNavigation : baseNavigation;
+  const navigation =
+    user?.rol === "Administrador" ? adminNavigation : baseNavigation;
 
   const closeSidebar = () => setSidebarOpen(false);
 
   const handleLogout = async () => {
     try {
       await signOut();
-      // La redirección se maneja automáticamente en el AuthProvider
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error("Error al cerrar sesión:", error);
     }
   };
 
   return (
     <div className="layout-container">
-      {/* Mobile menu button */}
       <button
+        type="button"
         className="mobile-menu-btn"
         onClick={() => setSidebarOpen(true)}
         aria-label="Abrir menú"
@@ -62,76 +68,81 @@ const Layout = ({ children }) => {
         <Bars3Icon className="h-6 w-6" />
       </button>
 
-      {/* Sidebar overlay */}
       <div
-        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`}
         onClick={closeSidebar}
+        onKeyDown={(e) => e.key === "Escape" && closeSidebar()}
+        role="presentation"
+        aria-hidden={!sidebarOpen}
       />
 
-      {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-          <div className="sidebar-title-container">
-            <Logo size={32} className="sidebar-logo" />
-            <h1 className="sidebar-title">
-              Tec. Médica
-            </h1>
+          <div className="sidebar-brand">
+            <Logo size={40} className="sidebar-logo" />
+            <div className="sidebar-title-block">
+              <h1 className="sidebar-title">Tec. Médica</h1>
+              <span className="sidebar-tagline">
+                Parque tecnológico · Control clínico
+              </span>
+            </div>
           </div>
           <button
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600"
+            type="button"
+            className="sidebar-close-btn"
             onClick={closeSidebar}
             aria-label="Cerrar menú"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
-        <nav className="sidebar-nav">
-          <div className="nav-menu">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`nav-item ${isActive ? 'active' : ''}`}
-                  onClick={closeSidebar}
-                >
-                  <item.icon className="nav-icon" />
-                  {item.name}
-                </Link>
-              );
-            })}
+        <nav className="sidebar-nav" aria-label="Principal">
+          <div>
+            <p className="nav-section-label">Menú</p>
+            <div className="nav-menu">
+              {navigation.map((item) => {
+                const active = isNavActive(item.href);
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`nav-item ${active ? "active" : ""}`}
+                    onClick={closeSidebar}
+                  >
+                    <item.icon className="nav-icon" aria-hidden />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          
-          {/* Información del usuario y botón de cerrar sesión */}
+
           <div className="sidebar-footer">
             <div className="user-info">
               <div className="user-avatar">
-                <UserIcon className="h-6 w-6" />
+                <UserIcon className="h-5 w-5" aria-hidden />
               </div>
               <div className="user-details">
-                <p className="user-name">{user?.email || 'Usuario'}</p>
-                <p className="user-role">{user?.rol || 'Usuario'}</p>
+                <p className="user-name">{user?.email || "Usuario"}</p>
+                <p className="user-role">{user?.rol || "Sesión"}</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={handleLogout}
               className="logout-btn"
               title="Cerrar sesión"
             >
-              <ArrowRightOnRectangleIcon className="logout-icon" />
-              Cerrar Sesión
+              <ArrowRightOnRectangleIcon className="logout-icon" aria-hidden />
+              Cerrar sesión
             </button>
           </div>
         </nav>
-      </div>
+      </aside>
 
-      {/* Main content */}
       <div className="main-content">
         <main className="main-wrapper">
-          <div className="main-container">
-            {children}
-          </div>
+          <div className="main-container">{children}</div>
         </main>
       </div>
     </div>

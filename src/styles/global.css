@@ -8,22 +8,22 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Georgia', 'Times New Roman', 'Times', serif !important;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
   font-weight: 400;
+  color: var(--color-text);
+  background-color: var(--color-bg-app);
 }
 
-/* Forzar fuentes en todos los elementos - Sobrescribir Tailwind */
 *, *::before, *::after,
 html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, button, input, select, textarea, label {
-  font-family: 'Georgia', 'Times New Roman', 'Times', serif !important;
+  font-family: var(--font-sans);
 }
 
-/* Sobrescribir clases específicas de Tailwind */
 .font-sans, .font-serif, .font-mono {
-  font-family: 'Georgia', 'Times New Roman', 'Times', serif !important;
+  font-family: var(--font-sans);
 }
 
 /* Responsive typography */
@@ -31,8 +31,9 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-weight: 700;
   line-height: 1.2;
-  font-family: 'Georgia', 'Times New Roman', 'Times', serif !important;
-  letter-spacing: 0.5px;
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
 }
 
 h1 {
@@ -329,12 +330,12 @@ h3 {
 }
 
 .btn-primary {
-  background-color: #3b82f6;
+  background-color: var(--color-accent);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: var(--color-accent-hover);
 }
 
 .btn-secondary {
@@ -369,9 +370,8 @@ h3 {
 
 .form-input:focus {
   outline: none;
-  ring: 2px;
-  ring-color: #3b82f6;
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .form-select {
@@ -387,9 +387,8 @@ h3 {
 
 .form-select:focus {
   outline: none;
-  ring: 2px;
-  ring-color: #3b82f6;
-  border-color: #3b82f6;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 /* Responsive table styles */
@@ -470,8 +469,8 @@ h3 {
 }
 
 .badge-info {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: #ccfbf1;
+  color: #0f766e;
 }
 
 /* Responsive spacing for mobile */

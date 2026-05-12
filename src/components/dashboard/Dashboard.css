@@ -15,15 +15,15 @@
 .dashboard-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #0f172a;
   margin-bottom: 0.75rem;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
 }
 
 .dashboard-subtitle {
-  color: #6b7280;
+  color: #64748b;
   font-size: 1.125rem;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.6;
 }
 
@@ -36,12 +36,13 @@
 
 .stat-card {
   background: #ffffff;
-  border-radius: 0.75rem;
-  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-lg, 1rem);
+  border: 1px solid #e2e8f0;
   padding: 1.75rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .stat-card::after {
@@ -56,33 +57,33 @@
 }
 
 .stat-card:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.1);
   transform: translateY(-2px);
 }
 
 .stat-card.blue::after {
-  background: #3b82f6;
+  background: #0d9488;
 }
 
 .stat-card.green::after {
-  background: #22c55e;
+  background: #059669;
 }
 
 .stat-card.yellow::after {
-  background: #eab308;
+  background: #d97706;
 }
 
 .stat-card.red::after {
-  background: #ef4444;
+  background: #e11d48;
 }
 
 .stat-card.purple::after {
-  background: #a855f7;
+  background: #7c3aed;
 }
 
 .stat-card.pink::after {
-  background: #ec4899;
+  background: #0284c7;
 }
 
 .stat-card-content {
@@ -94,18 +95,18 @@
 .stat-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b7280;
+  color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   line-height: 1.4;
 }
 
 .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .activity-section {

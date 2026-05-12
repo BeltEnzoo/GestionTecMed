@@ -109,19 +109,19 @@ const Logo = ({ className = "", size = 32 }) => {
       {/* Gradientes */}
       <defs>
         <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="50%" stopColor="#1E40AF" />
-          <stop offset="100%" stopColor="#1E3A8A" />
+          <stop offset="0%" stopColor="#0f766e" />
+          <stop offset="45%" stopColor="#0d9488" />
+          <stop offset="100%" stopColor="#134e4a" />
         </linearGradient>
-        
+
         <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#60A5FA" />
-          <stop offset="100%" stopColor="#2563EB" />
+          <stop offset="0%" stopColor="#5eead4" />
+          <stop offset="100%" stopColor="#0f766e" />
         </linearGradient>
-        
+
         <linearGradient id="techGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#10B981" />
-          <stop offset="100%" stopColor="#059669" />
+          <stop offset="0%" stopColor="#ccfbf1" />
+          <stop offset="100%" stopColor="#99f6e4" />
         </linearGradient>
       </defs>
     </svg>
