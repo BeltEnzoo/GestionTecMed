@@ -11,7 +11,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
-import { supabase } from '../../services/supabase';
+import { api } from '../../services/api';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -40,17 +40,10 @@ const EquipoEventsChart = ({ equipoId, equipoNombre }) => {
     try {
       setLoading(true);
       
-      // Obtener eventos del equipo
-      const { data: eventos, error } = await supabase
-        .from('historial_eventos')
-        .select('*')
-        .eq('equipo_id', equipoId)
-        .order('fecha_evento', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching eventos:', error);
-        return;
-      }
+      const { data: eventos } = await api(`/api/eventos/equipo/${equipoId}`);
+      const sorted = [...(eventos || [])].sort(
+        (a, b) => new Date(a.fecha_evento) - new Date(b.fecha_evento)
+      );
 
       // Procesar datos por meses (últimos 12 meses)
       const eventosPorMes = {};
@@ -70,9 +63,9 @@ const EquipoEventsChart = ({ equipoId, equipoNombre }) => {
       }
 
       // Contar eventos por mes
-      eventos?.forEach(evento => {
+      sorted.forEach(evento => {
         const mesEvento = evento.fecha_evento?.slice(0, 7);
-        if (eventosPorMes.hasOwnProperty(mesEvento)) {
+        if (Object.prototype.hasOwnProperty.call(eventosPorMes, mesEvento)) {
           eventosPorMes[mesEvento]++;
         }
       });

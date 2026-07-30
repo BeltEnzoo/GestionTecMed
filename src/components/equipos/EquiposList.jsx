@@ -95,14 +95,14 @@ const EquiposList = () => {
       // Actualizar equipo existente
       const { error } = await updateEquipo(editingEquipo.id, equipoData);
       if (error) {
-        alert('Error al actualizar el equipo: ' + error);
+        alert('❌ Error al actualizar el equipo:\n\n' + error);
         return;
       }
     } else {
       // Crear nuevo equipo
       const { error } = await createEquipo(equipoData);
       if (error) {
-        alert('Error al crear el equipo: ' + error);
+        alert('❌ Error al crear el equipo:\n\n' + error);
         return;
       }
     }

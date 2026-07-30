@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabase';
+import { api } from '../../services/api';
 import './MantenimientoForm.css';
 
 const MantenimientoForm = ({ mantenimiento, equipos, onClose }) => {
@@ -52,20 +52,15 @@ const MantenimientoForm = ({ mantenimiento, equipos, onClose }) => {
       };
 
       if (mantenimiento) {
-        // Actualizar mantenimiento existente
-        const { error } = await supabase
-          .from('mantenimientos')
-          .update(dataToSubmit)
-          .eq('id', mantenimiento.id);
-
-        if (error) throw error;
+        await api(`/api/mantenimientos/${mantenimiento.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(dataToSubmit),
+        });
       } else {
-        // Crear nuevo mantenimiento
-        const { error } = await supabase
-          .from('mantenimientos')
-          .insert([dataToSubmit]);
-
-        if (error) throw error;
+        await api('/api/mantenimientos', {
+          method: 'POST',
+          body: JSON.stringify(dataToSubmit),
+        });
       }
 
       onClose();

@@ -8,7 +8,7 @@ import {
   WrenchScrewdriverIcon,
   CalendarIcon,
 } from "@heroicons/react/24/outline";
-import { supabase } from "../../services/supabase";
+import { api } from "../../services/api";
 import DashboardCharts from "./DashboardCharts";
 import "./Dashboard.css";
 import "./DashboardCharts.css";
@@ -54,19 +54,9 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Obtener estadísticas de equipos
-      const { data: equipos, error: equiposError } = await supabase
-        .from('equipos')
-        .select('*');
-
-      if (equiposError) throw equiposError;
-
-      // Obtener estadísticas de mantenimientos
-      const { data: mantenimientos, error: mantenimientosError } = await supabase
-        .from('mantenimientos')
-        .select('*');
-
-      if (mantenimientosError) throw mantenimientosError;
+      const { data: dashboard } = await api('/api/reportes/dashboard');
+      const equipos = dashboard?.equipos || [];
+      const mantenimientos = dashboard?.mantenimientos || [];
 
       // Calcular estadísticas con normalización de estados
       const totalEquipos = equipos?.length || 0;
@@ -175,13 +165,9 @@ const Dashboard = () => {
 
   const fetchChartsData = async (equipos, mantenimientos) => {
     try {
-      // Obtener eventos agrupados por mes (últimos 6 meses)
-      const { data: eventos, error: eventosError } = await supabase
-        .from('historial_eventos')
-        .select('fecha_evento')
-        .order('fecha_evento', { ascending: true });
+      const { data: eventos } = await api('/api/eventos');
 
-      if (!eventosError && eventos && eventos.length > 0) {
+      if (eventos && eventos.length > 0) {
         // Calcular eventos por mes (últimos 6 meses)
         const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
         const eventosPorMes = [0, 0, 0, 0, 0, 0];

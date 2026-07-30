@@ -1,92 +1,11 @@
-import { supabase } from './supabase'
+import { api } from './api'
 
 export const reportesService = {
-  // Obtener estadísticas generales
   async getEstadisticasGenerales() {
     try {
-      const { data: equipos, error: equiposError } = await supabase
-        .from('equipos')
-        .select('*')
-
-      if (equiposError) {
-        console.error('Error al obtener equipos:', equiposError)
-        throw equiposError
-      }
-
-      const { data: mantenimientos, error: mantenimientosError } = await supabase
-        .from('mantenimientos')
-        .select('*')
-
-      if (mantenimientosError) {
-        console.error('Error al obtener mantenimientos:', mantenimientosError)
-        throw mantenimientosError
-      }
-
-      // Calcular estadísticas con datos seguros
-      const equiposData = equipos || []
-      const mantenimientosData = mantenimientos || []
-
-      // Función para normalizar estados
-      const normalizarEstado = (estado) => {
-        if (!estado) return '';
-        const estadoLower = estado.toLowerCase().trim();
-        // Mapear posibles variaciones
-        if (estadoLower === 'activo' || estadoLower === 'disponible') return 'activo';
-        if (estadoLower === 'mantenimiento' || estadoLower === 'en mantenimiento') return 'mantenimiento';
-        if (estadoLower === 'fuera-servicio' || estadoLower === 'fuera de servicio' || estadoLower === 'fuera_de_servicio') return 'fuera-servicio';
-        return estadoLower;
-      };
-
-      const totalEquipos = equiposData.length
-      const equiposActivos = equiposData.filter(e => normalizarEstado(e.estado) === 'activo').length
-      const equiposFueraServicio = equiposData.filter(e => normalizarEstado(e.estado) === 'fuera-servicio').length
-      const equiposMantenimiento = equiposData.filter(e => normalizarEstado(e.estado) === 'mantenimiento').length
-
-      // Distribución por tipo
-      const distribucionTipo = equiposData.reduce((acc, equipo) => {
-        const tipo = equipo.tipo || 'Sin especificar'
-        acc[tipo] = (acc[tipo] || 0) + 1
-        return acc
-      }, {})
-
-      // Distribución por ubicación
-      const distribucionUbicacion = equiposData.reduce((acc, equipo) => {
-        const ubicacion = equipo.ubicacion || 'Sin especificar'
-        acc[ubicacion] = (acc[ubicacion] || 0) + 1
-        return acc
-      }, {})
-
-      // Mantenimientos pendientes (normalizar estado)
-      const mantenimientosPendientes = mantenimientosData.filter(m => {
-        const estadoNormalizado = (m.estado || '').toLowerCase().trim();
-        return estadoNormalizado === 'programado' || estadoNormalizado === 'pendiente';
-      }).length
-
-      // Próximos mantenimientos (en los próximos 7 días)
-      const hoy = new Date()
-      hoy.setHours(0, 0, 0, 0) // Normalizar a inicio del día
-      const en7Dias = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000)
-      const proximosMantenimientos = mantenimientosData.filter(m => {
-        if (!m.fecha_programada) return false
-        const fecha = new Date(m.fecha_programada)
-        fecha.setHours(0, 0, 0, 0)
-        const diasDiferencia = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24))
-        return diasDiferencia >= 0 && diasDiferencia <= 7
-      }).length
-
-      return {
-        totalEquipos,
-        equiposActivos,
-        equiposFueraServicio,
-        equiposMantenimiento,
-        distribucionTipo,
-        distribucionUbicacion,
-        mantenimientosPendientes,
-        proximosMantenimientos
-      }
+      return await api('/api/reportes/generales')
     } catch (error) {
       console.error('Error al obtener estadísticas generales:', error)
-      // Devolver estadísticas por defecto en caso de error
       return {
         totalEquipos: 0,
         equiposActivos: 0,
@@ -95,157 +14,121 @@ export const reportesService = {
         distribucionTipo: {},
         distribucionUbicacion: {},
         mantenimientosPendientes: 0,
-        proximosMantenimientos: 0
+        proximosMantenimientos: 0,
       }
     }
   },
 
-  // Obtener reporte de mantenimientos por período
   async getReporteMantenimientos(fechaInicio, fechaFin) {
     try {
-      const { data, error } = await supabase
-        .from('mantenimientos')
-        .select('*')
-        .gte('fecha_completado', fechaInicio)
-        .lte('fecha_completado', fechaFin)
+      const params = new URLSearchParams()
+      if (fechaInicio) params.set('fechaInicio', fechaInicio)
+      if (fechaFin) params.set('fechaFin', fechaFin)
+      const result = await api(`/api/reportes/mantenimientos?${params}`)
+      const data = result.data || []
 
-      if (error) throw error
-
-      // Calcular estadísticas del período
-      const totalMantenimientos = data?.length || 0
-      const mantenimientosCompletados = data?.filter(m => m.estado === 'Completado').length || 0
-      const mantenimientosPendientes = data?.filter(m => m.estado === 'Pendiente').length || 0
-
-      // Costo total
-      const costoTotal = data?.reduce((sum, m) => sum + (m.costo || 0), 0) || 0
-
-      // Mantenimientos por tipo
-      const mantenimientosPorTipo = data?.reduce((acc, m) => {
+      const mantenimientosPorTipo = data.reduce((acc, m) => {
         const tipo = m.tipo || 'Sin especificar'
         acc[tipo] = (acc[tipo] || 0) + 1
         return acc
-      }, {}) || {}
+      }, {})
 
       return {
-        totalMantenimientos,
-        mantenimientosCompletados,
-        mantenimientosPendientes,
-        costoTotal,
+        totalMantenimientos: result.totalMantenimientos || 0,
+        mantenimientosCompletados: result.mantenimientosCompletados || 0,
+        mantenimientosPendientes: result.mantenimientosPendientes || 0,
+        costoTotal: result.costoTotal || 0,
         mantenimientosPorTipo,
-        detalles: data || []
+        detalles: data,
       }
     } catch (error) {
       console.error('Error al obtener reporte de mantenimientos:', error)
-      // Devolver datos vacíos en caso de error
       return {
         totalMantenimientos: 0,
         mantenimientosCompletados: 0,
         mantenimientosPendientes: 0,
         costoTotal: 0,
         mantenimientosPorTipo: {},
-        detalles: []
+        detalles: [],
       }
     }
   },
 
-  // Obtener equipos que requieren atención
   async getEquiposRequierenAtencion() {
     try {
-      // Equipos fuera de servicio
-      const { data: equiposFueraServicio, error: error1 } = await supabase
-        .from('equipos')
-        .select('*')
-        .eq('estado', 'Fuera de Servicio')
+      const { data: equipos } = await api('/api/equipos')
+      const { data: mantenimientos } = await api('/api/mantenimientos')
+      const now = new Date()
 
-      if (error1) throw error1
+      const equiposFueraServicio = (equipos || []).filter((e) => {
+        const s = (e.estado || '').toLowerCase()
+        return s === 'fuera-servicio' || s === 'fuera de servicio'
+      })
 
-      // Mantenimientos vencidos (simplificado)
-      const { data: mantenimientosVencidos, error: error2 } = await supabase
-        .from('mantenimientos')
-        .select('*')
-        .eq('estado', 'Pendiente')
-        .lt('fecha_programada', new Date().toISOString())
+      const mantenimientosVencidos = (mantenimientos || []).filter((m) => {
+        const e = (m.estado || '').toLowerCase()
+        return (
+          (e === 'programado' || e === 'pendiente') &&
+          m.fecha_programada &&
+          new Date(m.fecha_programada) < now
+        )
+      })
 
-      if (error2) throw error2
-
-      // Equipos sin mantenimiento reciente (simplificado)
-      const { data: equiposActivos, error: error3 } = await supabase
-        .from('equipos')
-        .select('*')
-        .eq('estado', 'Activo')
-
-      if (error3) throw error3
-
-      // Por ahora, solo devolvemos equipos activos como "sin mantenimiento reciente"
-      // Esto se puede mejorar cuando tengamos más datos
-      const equiposSinMantenimientoReciente = equiposActivos || []
+      const equiposSinMantenimientoReciente = (equipos || []).filter((e) => {
+        const s = (e.estado || '').toLowerCase()
+        return s === 'activo'
+      })
 
       return {
-        equiposFueraServicio: equiposFueraServicio || [],
-        mantenimientosVencidos: mantenimientosVencidos || [],
-        equiposSinMantenimientoReciente
+        equiposFueraServicio,
+        mantenimientosVencidos,
+        equiposSinMantenimientoReciente,
       }
     } catch (error) {
       console.error('Error al obtener equipos que requieren atención:', error)
-      // Devolver datos vacíos en caso de error para que la app no se rompa
       return {
         equiposFueraServicio: [],
         mantenimientosVencidos: [],
-        equiposSinMantenimientoReciente: []
+        equiposSinMantenimientoReciente: [],
       }
     }
   },
 
-  // Obtener todos los equipos para exportación
   async getAllEquipos() {
     try {
-      const { data: equipos, error } = await supabase
-        .from('equipos')
-        .select('*')
-        .order('marca', { ascending: true })
-
-      if (error) throw error
-
-      return equipos || []
+      const { data } = await api('/api/equipos')
+      return (data || []).sort((a, b) =>
+        (a.marca || '').localeCompare(b.marca || '')
+      )
     } catch (error) {
       console.error('Error al obtener todos los equipos:', error)
       return []
     }
   },
 
-  // Obtener tendencias de mantenimiento
   async getTendenciasMantenimiento(meses = 12) {
     try {
       const fechaInicio = new Date()
       fechaInicio.setMonth(fechaInicio.getMonth() - meses)
+      const result = await api(
+        `/api/reportes/mantenimientos?fechaInicio=${fechaInicio.toISOString().split('T')[0]}`
+      )
+      const data = result.data || []
 
-      const { data, error } = await supabase
-        .from('mantenimientos')
-        .select('*')
-        .gte('fecha_completado', fechaInicio.toISOString())
-
-      if (error) throw error
-
-      // Agrupar por mes
       const tendencias = data.reduce((acc, mantenimiento) => {
+        if (!mantenimiento.fecha_completado) return acc
         const fecha = new Date(mantenimiento.fecha_completado)
         const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
-        
+
         if (!acc[mes]) {
-          acc[mes] = {
-            mes,
-            total: 0,
-            completados: 0,
-            costo: 0
-          }
+          acc[mes] = { mes, total: 0, completados: 0, costo: 0 }
         }
-        
+
         acc[mes].total += 1
-        if (mantenimiento.estado === 'Completado') {
+        if ((mantenimiento.estado || '').toLowerCase() === 'completado') {
           acc[mes].completados += 1
         }
-        acc[mes].costo += mantenimiento.costo || 0
-        
+        acc[mes].costo += Number(mantenimiento.costo) || 0
         return acc
       }, {})
 
@@ -254,5 +137,5 @@ export const reportesService = {
       console.error('Error al obtener tendencias de mantenimiento:', error)
       throw error
     }
-  }
+  },
 }

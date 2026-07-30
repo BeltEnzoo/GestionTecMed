@@ -1,45 +1,34 @@
-import { supabase } from '../config/supabase'
-
-const STORAGE_BUCKET = 'equipos-files'
+import { api, API_URL, getToken } from '../services/api'
 
 /**
- * Sube un archivo a Supabase Storage
- * @param {File} file - El archivo a subir
- * @param {string} equipoId - ID del equipo (para crear la carpeta)
- * @returns {Promise<{url: string, error: null} | {url: null, error: string}>}
+ * Sube un archivo al backend (multer /uploads)
  */
 export const uploadFileToStorage = async (file, equipoId) => {
   try {
-    // Crear un nombre único para el archivo
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `${equipoId}/${fileName}`
+    const form = new FormData()
+    form.append('file', file)
+    form.append('equipoId', equipoId)
 
-    // Subir el archivo
-    const { data, error: uploadError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
+    const res = await fetch(`${API_URL}/api/uploads`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: form,
+    })
 
-    if (uploadError) {
-      console.error('Error uploading file:', uploadError)
-      return { url: null, error: uploadError.message }
+    const data = await res.json()
+    if (!res.ok) {
+      return { url: null, error: data.error || 'Error al subir archivo' }
     }
 
-    // Obtener la URL pública del archivo
-    const { data: { publicUrl } } = supabase.storage
-      .from(STORAGE_BUCKET)
-      .getPublicUrl(filePath)
-
     return {
-      url: publicUrl,
+      url: data.url,
       error: null,
-      path: filePath,
-      name: file.name,
-      type: file.type,
-      size: file.size
+      path: data.path,
+      name: data.name,
+      type: data.type,
+      size: data.size,
     }
   } catch (error) {
     console.error('Error in uploadFileToStorage:', error)
@@ -47,38 +36,22 @@ export const uploadFileToStorage = async (file, equipoId) => {
   }
 }
 
-/**
- * Sube múltiples archivos a Supabase Storage
- * @param {File[]} files - Array de archivos a subir
- * @param {string} equipoId - ID del equipo (para crear la carpeta)
- * @returns {Promise<Array<{url: string, error: null} | {url: null, error: string}>>}
- */
 export const uploadMultipleFiles = async (files, equipoId) => {
-  const uploadPromises = files.map(file => uploadFileToStorage(file.file || file, equipoId))
-  const results = await Promise.all(uploadPromises)
-  return results
+  const uploadPromises = files.map((file) =>
+    uploadFileToStorage(file.file || file, equipoId)
+  )
+  return Promise.all(uploadPromises)
 }
 
-/**
- * Elimina un archivo de Supabase Storage
- * @param {string} filePath - Ruta del archivo en Storage
- * @returns {Promise<{success: boolean, error: null | string}>}
- */
 export const deleteFileFromStorage = async (filePath) => {
   try {
-    const { error } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .remove([filePath])
-
-    if (error) {
-      console.error('Error deleting file:', error)
-      return { success: false, error: error.message }
-    }
-
+    await api('/api/uploads', {
+      method: 'DELETE',
+      body: JSON.stringify({ path: filePath }),
+    })
     return { success: true, error: null }
   } catch (error) {
     console.error('Error in deleteFileFromStorage:', error)
     return { success: false, error: error.message }
   }
 }
-

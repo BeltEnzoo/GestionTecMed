@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabase';
+import { api } from '../../services/api';
 import MantenimientoForm from './MantenimientoForm';
 import './MantenimientosList.css';
 
@@ -19,19 +19,11 @@ const MantenimientosList = () => {
 
   const fetchMantenimientos = async () => {
     try {
-      const { data, error } = await supabase
-        .from('mantenimientos')
-        .select(`
-          *,
-          equipos (
-            nombre,
-            numero_serie
-          )
-        `)
-        .order('fecha_programada', { ascending: false });
-
-      if (error) throw error;
-      setMantenimientos(data || []);
+      const { data } = await api('/api/mantenimientos');
+      const sorted = (data || []).sort(
+        (a, b) => new Date(b.fecha_programada) - new Date(a.fecha_programada)
+      );
+      setMantenimientos(sorted);
     } catch (error) {
       console.error('Error fetching mantenimientos:', error);
     } finally {
@@ -41,13 +33,11 @@ const MantenimientosList = () => {
 
   const fetchEquipos = async () => {
     try {
-      const { data, error } = await supabase
-        .from('equipos')
-        .select('id, nombre, numero_serie')
-        .order('nombre');
-
-      if (error) throw error;
-      setEquipos(data || []);
+      const { data } = await api('/api/equipos');
+      const sorted = (data || [])
+        .map((e) => ({ id: e.id, nombre: e.nombre, numero_serie: e.numero_serie }))
+        .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      setEquipos(sorted);
     } catch (error) {
       console.error('Error fetching equipos:', error);
     }
@@ -69,13 +59,7 @@ const MantenimientosList = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('mantenimientos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
+      await api(`/api/mantenimientos/${id}`, { method: 'DELETE' });
       fetchMantenimientos();
     } catch (error) {
       console.error('Error deleting mantenimiento:', error);

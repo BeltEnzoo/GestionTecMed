@@ -1,16 +1,10 @@
-import { supabase } from '../config/supabase'
+import { api } from './api'
 
-// Tabla de stock/insumos
-const STOCK_TABLE = 'stock_insumos'
-
-// Función para mapear campos del formulario a columnas de la base de datos
 const mapFormFieldsToDBColumns = (formData) => {
   const emptyStringToNull = (value) => {
-    if (value === '' || value === undefined || value === 'EMPTY') {
-      return null;
-    }
-    return value;
-  };
+    if (value === '' || value === undefined || value === 'EMPTY') return null
+    return value
+  }
 
   return {
     nombre: formData.nombre || '',
@@ -25,41 +19,32 @@ const mapFormFieldsToDBColumns = (formData) => {
     fecha_ingreso: formData.fechaIngreso || new Date().toISOString().split('T')[0],
     fecha_vencimiento: formData.fechaVencimiento || null,
     notas: emptyStringToNull(formData.notas),
-    created_by: formData.createdBy
+    created_by: formData.createdBy,
   }
 }
 
-// Función para mapear datos de la base de datos al formato del frontend
-const mapDBColumnsToFormFields = (dbData) => {
-  return {
-    id: dbData.id,
-    nombre: dbData.nombre,
-    descripcion: dbData.descripcion,
-    categoria: dbData.categoria,
-    cantidad: dbData.cantidad,
-    unidadMedida: dbData.unidad_medida,
-    stockMinimo: dbData.stock_minimo,
-    ubicacion: dbData.ubicacion,
-    proveedor: dbData.proveedor,
-    costoUnitario: dbData.costo_unitario,
-    fechaIngreso: dbData.fecha_ingreso,
-    fechaVencimiento: dbData.fecha_vencimiento,
-    notas: dbData.notas,
-    createdAt: dbData.created_at,
-    updatedAt: dbData.updated_at
-  }
-}
+const mapDBColumnsToFormFields = (dbData) => ({
+  id: dbData.id,
+  nombre: dbData.nombre,
+  descripcion: dbData.descripcion,
+  categoria: dbData.categoria,
+  cantidad: dbData.cantidad,
+  unidadMedida: dbData.unidad_medida,
+  stockMinimo: dbData.stock_minimo,
+  ubicacion: dbData.ubicacion,
+  proveedor: dbData.proveedor,
+  costoUnitario: dbData.costo_unitario,
+  fechaIngreso: dbData.fecha_ingreso,
+  fechaVencimiento: dbData.fecha_vencimiento,
+  notas: dbData.notas,
+  createdAt: dbData.created_at,
+  updatedAt: dbData.updated_at,
+})
 
 export const stockService = {
-  // Obtener todos los items de stock
   async getAll() {
     try {
-      const { data, error } = await supabase
-        .from(STOCK_TABLE)
-        .select('*')
-        .order('nombre', { ascending: true })
-      
-      if (error) throw error
+      const { data } = await api('/api/stock')
       return { data, error: null }
     } catch (error) {
       console.error('Error fetching stock:', error)
@@ -67,16 +52,9 @@ export const stockService = {
     }
   },
 
-  // Obtener un item de stock por ID
   async getById(id) {
     try {
-      const { data, error } = await supabase
-        .from(STOCK_TABLE)
-        .select('*')
-        .eq('id', id)
-        .single()
-      
-      if (error) throw error
+      const { data } = await api(`/api/stock/${id}`)
       return { data: mapDBColumnsToFormFields(data), error: null }
     } catch (error) {
       console.error('Error fetching stock item:', error)
@@ -84,17 +62,12 @@ export const stockService = {
     }
   },
 
-  // Crear un nuevo item de stock
   async create(stockData) {
     try {
-      const dbData = mapFormFieldsToDBColumns(stockData)
-      const { data, error } = await supabase
-        .from(STOCK_TABLE)
-        .insert([dbData])
-        .select()
-        .single()
-      
-      if (error) throw error
+      const { data } = await api('/api/stock', {
+        method: 'POST',
+        body: JSON.stringify(mapFormFieldsToDBColumns(stockData)),
+      })
       return { data: mapDBColumnsToFormFields(data), error: null }
     } catch (error) {
       console.error('Error creating stock item:', error)
@@ -102,18 +75,12 @@ export const stockService = {
     }
   },
 
-  // Actualizar un item de stock
   async update(id, stockData) {
     try {
-      const dbData = mapFormFieldsToDBColumns(stockData)
-      const { data, error } = await supabase
-        .from(STOCK_TABLE)
-        .update(dbData)
-        .eq('id', id)
-        .select()
-        .single()
-      
-      if (error) throw error
+      const { data } = await api(`/api/stock/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(mapFormFieldsToDBColumns(stockData)),
+      })
       return { data: mapDBColumnsToFormFields(data), error: null }
     } catch (error) {
       console.error('Error updating stock item:', error)
@@ -121,15 +88,9 @@ export const stockService = {
     }
   },
 
-  // Eliminar un item de stock
   async delete(id) {
     try {
-      const { error } = await supabase
-        .from(STOCK_TABLE)
-        .delete()
-        .eq('id', id)
-      
-      if (error) throw error
+      await api(`/api/stock/${id}`, { method: 'DELETE' })
       return { data: true, error: null }
     } catch (error) {
       console.error('Error deleting stock item:', error)
@@ -137,22 +98,13 @@ export const stockService = {
     }
   },
 
-  // Buscar items de stock
   async search(searchTerm) {
     try {
-      const { data, error } = await supabase
-        .from(STOCK_TABLE)
-        .select('*')
-        .or(`nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%,categoria.ilike.%${searchTerm}%,ubicacion.ilike.%${searchTerm}%`)
-        .order('nombre', { ascending: true })
-      
-      if (error) throw error
+      const { data } = await api(`/api/stock/search?q=${encodeURIComponent(searchTerm)}`)
       return { data, error: null }
     } catch (error) {
       console.error('Error searching stock:', error)
       return { data: null, error }
     }
-  }
+  },
 }
-
-
