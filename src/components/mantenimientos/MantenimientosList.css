@@ -16,14 +16,14 @@
 .mantenimientos-header h1 {
   color: #2c3e50;
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
 .mantenimientos-header p {
   color: #7f8c8d;
   margin: 5px 0 0 0;
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .mantenimientos-filters {
@@ -193,12 +193,12 @@
 }
 
 .btn-primary {
-  background: #3498db;
+  background: #0d9488;
   color: white;
 }
 
 .btn-primary:hover {
-  background: #2980b9;
+  background: #0f766e;
 }
 
 .btn-warning {
@@ -250,7 +250,7 @@
   }
 
   .mantenimientos-header h1 {
-    font-size: 1.5rem;
+    font-size: var(--fs-page-title, 1.25rem);
   }
 
   .mantenimientos-filters {

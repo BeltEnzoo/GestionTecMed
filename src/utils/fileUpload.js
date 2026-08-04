@@ -1,4 +1,4 @@
-import { api, API_URL, getToken } from '../services/api'
+import { api, API_URL, getToken, getSedeId } from '../services/api'
 
 /**
  * Sube un archivo al backend (multer /uploads)
@@ -9,11 +9,15 @@ export const uploadFileToStorage = async (file, equipoId) => {
     form.append('file', file)
     form.append('equipoId', equipoId)
 
+    const headers = {
+      Authorization: `Bearer ${getToken()}`,
+    }
+    const sedeId = getSedeId()
+    if (sedeId) headers['X-Sede-Id'] = sedeId
+
     const res = await fetch(`${API_URL}/api/uploads`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
+      headers,
       body: form,
     })
 

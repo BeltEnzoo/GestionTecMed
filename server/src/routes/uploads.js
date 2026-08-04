@@ -48,10 +48,11 @@ router.post('/', requireWriteAccess, upload.single('file'), async (req, res) => 
 
     const equipoId = req.body.equipoId || null
     const { rows } = await query(
-      `INSERT INTO archivo_blobs (equipo_id, filename, mime_type, size_bytes, content)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO archivo_blobs (sede_id, equipo_id, filename, mime_type, size_bytes, content)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, filename, mime_type, size_bytes`,
       [
+        req.sedeId,
         equipoId,
         req.file.originalname,
         req.file.mimetype,

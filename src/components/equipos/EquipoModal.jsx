@@ -2,7 +2,7 @@ import React from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import './EquipoModal.css';
 
-const EquipoModal = ({ equipo, isOpen, onClose, onEdit, onDelete }) => {
+const EquipoModal = ({ equipo, isOpen, onClose, onEdit, onDelete, canWrite = true }) => {
   if (!isOpen || !equipo) return null;
 
   const formatDate = (date) => {
@@ -173,12 +173,16 @@ const EquipoModal = ({ equipo, isOpen, onClose, onEdit, onDelete }) => {
           <button className="equipo-modal-btn equipo-modal-btn-secondary" onClick={onClose}>
             Cerrar
           </button>
-          <button className="equipo-modal-btn equipo-modal-btn-primary" onClick={onEdit}>
-            Editar
-          </button>
-          <button className="equipo-modal-btn equipo-modal-btn-danger" onClick={onDelete}>
-            Eliminar
-          </button>
+          {canWrite && (
+            <>
+              <button className="equipo-modal-btn equipo-modal-btn-primary" onClick={onEdit}>
+                Editar
+              </button>
+              <button className="equipo-modal-btn equipo-modal-btn-danger" onClick={onDelete}>
+                Eliminar
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

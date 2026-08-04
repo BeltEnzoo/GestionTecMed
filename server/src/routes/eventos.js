@@ -16,10 +16,14 @@ async function attachEquipos(rows) {
   return rows.map((r) => ({ ...r, equipos: map[r.equipo_id] || null }))
 }
 
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM historial_eventos ORDER BY fecha_evento DESC`
+      `SELECT h.* FROM historial_eventos h
+       INNER JOIN equipos e ON e.id = h.equipo_id
+       WHERE e.sede_id = $1
+       ORDER BY h.fecha_evento DESC`,
+      [req.sedeId]
     )
     res.json({ data: await attachEquipos(rows) })
   } catch (error) {
@@ -31,8 +35,11 @@ router.get('/', async (_req, res) => {
 router.get('/equipo/:equipoId', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM historial_eventos WHERE equipo_id = $1 ORDER BY fecha_evento DESC`,
-      [req.params.equipoId]
+      `SELECT h.* FROM historial_eventos h
+       INNER JOIN equipos e ON e.id = h.equipo_id
+       WHERE h.equipo_id = $1 AND e.sede_id = $2
+       ORDER BY h.fecha_evento DESC`,
+      [req.params.equipoId, req.sedeId]
     )
     res.json({ data: await attachEquipos(rows) })
   } catch (error) {
@@ -41,17 +48,22 @@ router.get('/equipo/:equipoId', async (req, res) => {
   }
 })
 
-router.get('/stats', async (_req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    const { rows } = await query(`
+    const { rows } = await query(
+      `
       SELECT
         COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE estado = 'Registrado')::int AS registrados,
-        COUNT(*) FILTER (WHERE estado = 'En Proceso')::int AS en_proceso,
-        COUNT(*) FILTER (WHERE estado = 'Resuelto')::int AS resueltos,
-        COUNT(*) FILTER (WHERE prioridad = 'Alta')::int AS prioridad_alta
-      FROM historial_eventos
-    `)
+        COUNT(*) FILTER (WHERE h.estado = 'Registrado')::int AS registrados,
+        COUNT(*) FILTER (WHERE h.estado = 'En Proceso')::int AS en_proceso,
+        COUNT(*) FILTER (WHERE h.estado = 'Resuelto')::int AS resueltos,
+        COUNT(*) FILTER (WHERE h.prioridad = 'Alta')::int AS prioridad_alta
+      FROM historial_eventos h
+      INNER JOIN equipos e ON e.id = h.equipo_id
+      WHERE e.sede_id = $1
+    `,
+      [req.sedeId]
+    )
     res.json({ data: rows[0] })
   } catch (error) {
     console.error(error)
@@ -62,8 +74,10 @@ router.get('/stats', async (_req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM historial_eventos WHERE id = $1`,
-      [req.params.id]
+      `SELECT h.* FROM historial_eventos h
+       INNER JOIN equipos e ON e.id = h.equipo_id
+       WHERE h.id = $1 AND e.sede_id = $2`,
+      [req.params.id, req.sedeId]
     )
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
     const [item] = await attachEquipos(rows)
@@ -77,7 +91,15 @@ router.get('/:id', async (req, res) => {
 router.post('/', requireWriteAccess, async (req, res) => {
   try {
     const b = req.body
-    const equipoId = b.equipo_id || b.equipo
+    const equipoRef = b.equipo_id || b.equipo
+    const owned = await query(
+      `SELECT id FROM equipos WHERE sede_id = $1 AND id::text = $2 LIMIT 1`,
+      [req.sedeId, String(equipoRef)]
+    )
+    const equipoId = owned.rows[0]?.id
+    if (!equipoId) {
+      return res.status(400).json({ error: 'Equipo inválido para esta sede' })
+    }
     const { rows } = await query(
       `INSERT INTO historial_eventos (
         equipo_id, tipo_evento, titulo, descripcion, fecha_evento,
@@ -152,9 +174,12 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
 
 router.delete('/:id', requireWriteAccess, async (req, res) => {
   try {
-    const result = await query(`DELETE FROM historial_eventos WHERE id = $1`, [
-      req.params.id,
-    ])
+    const result = await query(
+      `DELETE FROM historial_eventos h
+       USING equipos e
+       WHERE h.equipo_id = e.id AND h.id = $1 AND e.sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (result.rowCount === 0) return res.status(404).json({ error: 'No encontrado' })
     res.json({ data: true })
   } catch (error) {

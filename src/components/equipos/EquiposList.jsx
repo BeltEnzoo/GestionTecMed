@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PlusIcon, MagnifyingGlassIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useEquipos } from "../../hooks/useEquipos";
+import { useAuth } from "../../hooks/useAuth";
 import EquipoForm from "./EquipoForm";
 import EquipoModal from "./EquipoModal";
 import "./EquiposList.css";
 
 const EquiposList = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canWrite = user?.rol !== 'Invitado';
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -155,10 +158,12 @@ const EquiposList = () => {
               Gestión del inventario de tecnología médica
             </p>
           </div>
-          <button className="new-equipo-btn" onClick={handleNewEquipo}>
-            <PlusIcon className="new-equipo-btn-icon" />
-            Nuevo Equipo
-          </button>
+          {canWrite && (
+            <button className="new-equipo-btn" onClick={handleNewEquipo}>
+              <PlusIcon className="new-equipo-btn-icon" />
+              Nuevo Equipo
+            </button>
+          )}
         </div>
       </div>
 
@@ -228,20 +233,24 @@ const EquiposList = () => {
                     <EyeIcon className="h-3 w-3" />
                     Ver
                   </button>
-                  <button 
-                    className="edit-btn"
-                    onClick={() => handleEditEquipo(equipo)}
-                    title="Editar"
-                  >
-                    Editar
-                  </button>
-                  <button 
-                    className="delete-btn"
-                    onClick={() => handleDeleteEquipo(equipo)}
-                    title="Eliminar"
-                  >
-                    Eliminar
-                  </button>
+                  {canWrite && (
+                    <>
+                      <button 
+                        className="edit-btn"
+                        onClick={() => handleEditEquipo(equipo)}
+                        title="Editar"
+                      >
+                        Editar
+                      </button>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => handleDeleteEquipo(equipo)}
+                        title="Eliminar"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
@@ -306,20 +315,24 @@ const EquiposList = () => {
                   <EyeIcon className="h-3 w-3" />
                   Ver
                 </button>
-                <button 
-                  className="edit-btn"
-                  onClick={() => handleEditEquipo(equipo)}
-                  title="Editar"
-                >
-                  Editar
-                </button>
-                <button 
-                  className="delete-btn"
-                  onClick={() => handleDeleteEquipo(equipo)}
-                  title="Eliminar"
-                >
-                  Eliminar
-                </button>
+                {canWrite && (
+                  <>
+                    <button 
+                      className="edit-btn"
+                      onClick={() => handleEditEquipo(equipo)}
+                      title="Editar"
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDeleteEquipo(equipo)}
+                      title="Eliminar"
+                    >
+                      Eliminar
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))
@@ -341,6 +354,7 @@ const EquiposList = () => {
         onClose={handleCloseModal}
         onEdit={handleEditEquipo}
         onDelete={handleDeleteEquipo}
+        canWrite={canWrite}
       />
     </div>
   );

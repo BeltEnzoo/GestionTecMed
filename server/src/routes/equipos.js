@@ -12,15 +12,21 @@ function uniqueViolationMessage(error) {
       codigo_interno: 'Código Interno',
       numero_serie: 'Número de Serie',
     }
-    return `Ya existe un equipo con ${nombres[match[1]] || match[1]} "${match[2]}".`
+    const campo = match[1].includes('codigo_interno')
+      ? 'codigo_interno'
+      : match[1].includes('numero_serie')
+        ? 'numero_serie'
+        : match[1]
+    return `Ya existe un equipo en esta sede con ${nombres[campo] || campo} "${match[2]}".`
   }
-  return 'Ya existe un equipo con este valor.'
+  return 'Ya existe un equipo con este valor en esta sede.'
 }
 
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM equipos ORDER BY created_at DESC`
+      `SELECT * FROM equipos WHERE sede_id = $1 ORDER BY created_at DESC`,
+      [req.sedeId]
     )
     res.json({ data: rows })
   } catch (error) {
@@ -29,16 +35,20 @@ router.get('/', async (_req, res) => {
   }
 })
 
-router.get('/stats', async (_req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    const { rows } = await query(`
+    const { rows } = await query(
+      `
       SELECT
         COUNT(*)::int AS total,
         COUNT(*) FILTER (WHERE LOWER(estado) = 'activo')::int AS activos,
         COUNT(*) FILTER (WHERE LOWER(estado) = 'mantenimiento')::int AS mantenimiento,
         COUNT(*) FILTER (WHERE LOWER(estado) IN ('fuera-servicio', 'fuera_de_servicio'))::int AS "fueraServicio"
       FROM equipos
-    `)
+      WHERE sede_id = $1
+    `,
+      [req.sedeId]
+    )
     res.json({ data: rows[0] })
   } catch (error) {
     console.error(error)
@@ -51,10 +61,11 @@ router.get('/search', async (req, res) => {
     const term = `%${req.query.q || ''}%`
     const { rows } = await query(
       `SELECT * FROM equipos
-       WHERE nombre ILIKE $1 OR marca ILIKE $1 OR modelo ILIKE $1
-          OR numero_serie ILIKE $1 OR codigo_interno ILIKE $1 OR sala ILIKE $1
+       WHERE sede_id = $1
+         AND (nombre ILIKE $2 OR marca ILIKE $2 OR modelo ILIKE $2
+          OR numero_serie ILIKE $2 OR codigo_interno ILIKE $2 OR sala ILIKE $2)
        ORDER BY created_at DESC`,
-      [term]
+      [req.sedeId, term]
     )
     res.json({ data: rows })
   } catch (error) {
@@ -65,7 +76,10 @@ router.get('/search', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const { rows } = await query(`SELECT * FROM equipos WHERE id = $1`, [req.params.id])
+    const { rows } = await query(
+      `SELECT * FROM equipos WHERE id = $1 AND sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (!rows[0]) return res.status(404).json({ error: 'Equipo no encontrado' })
 
     const eventos = await query(
@@ -95,7 +109,7 @@ router.post('/', requireWriteAccess, async (req, res) => {
     const b = req.body
     const { rows } = await query(
       `INSERT INTO equipos (
-        nombre, marca, modelo, numero_serie, codigo_interno, categoria, estado,
+        sede_id, nombre, marca, modelo, numero_serie, codigo_interno, categoria, estado,
         año_fabricacion, potencia, voltaje, dimensiones, peso, certificaciones,
         fecha_vencimiento_garantia, edificio, piso, sala, cama, responsable,
         departamento, frecuencia_mantenimiento, proveedor_mantenimiento,
@@ -103,9 +117,10 @@ router.post('/', requireWriteAccess, async (req, res) => {
         archivos, created_by
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,
-        $20,$21,$22,$23,$24,$25,$26,$27,$28
+        $20,$21,$22,$23,$24,$25,$26,$27,$28,$29
       ) RETURNING *`,
       [
+        req.sedeId,
         b.nombre ?? null,
         b.marca ?? null,
         b.modelo ?? null,
@@ -189,9 +204,11 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
       return res.status(400).json({ error: 'Nada para actualizar' })
     }
 
-    values.push(req.params.id)
+    values.push(req.params.id, req.sedeId)
     const { rows } = await query(
-      `UPDATE equipos SET ${fields.join(', ')} WHERE id = $${values.length} RETURNING *`,
+      `UPDATE equipos SET ${fields.join(', ')}
+       WHERE id = $${values.length - 1} AND sede_id = $${values.length}
+       RETURNING *`,
       values
     )
     if (!rows[0]) return res.status(404).json({ error: 'Equipo no encontrado' })
@@ -202,9 +219,13 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
     res.status(msg ? 409 : 500).json({ error: msg || error.message, code: error.code, details: error.detail })
   }
 })
+
 router.delete('/:id', requireWriteAccess, async (req, res) => {
   try {
-    const result = await query(`DELETE FROM equipos WHERE id = $1`, [req.params.id])
+    const result = await query(
+      `DELETE FROM equipos WHERE id = $1 AND sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (result.rowCount === 0) return res.status(404).json({ error: 'Equipo no encontrado' })
     res.json({ data: true })
   } catch (error) {

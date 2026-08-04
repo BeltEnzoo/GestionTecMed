@@ -23,22 +23,24 @@ export const usuariosService = {
 
   async createUsuario(usuarioData) {
     try {
+      const payload = {
+        email: usuarioData.email,
+        password: usuarioData.password,
+        nombre: usuarioData.nombre,
+        apellido: usuarioData.apellido,
+        telefono: usuarioData.telefono,
+        departamento: usuarioData.departamento,
+        cargo: usuarioData.cargo,
+        rol: usuarioData.rol,
+        estado: usuarioData.estado,
+        fechaIngreso: usuarioData.fechaIngreso,
+        permisos: usuarioData.permisos || {},
+        avatarUrl: usuarioData.avatarUrl,
+        sede_id: usuarioData.sede_id || undefined,
+      }
       const { data } = await api('/api/usuarios', {
         method: 'POST',
-        body: JSON.stringify({
-          email: usuarioData.email,
-          password: usuarioData.password,
-          nombre: usuarioData.nombre,
-          apellido: usuarioData.apellido,
-          telefono: usuarioData.telefono,
-          departamento: usuarioData.departamento,
-          cargo: usuarioData.cargo,
-          rol: usuarioData.rol,
-          estado: usuarioData.estado,
-          fechaIngreso: usuarioData.fechaIngreso,
-          permisos: usuarioData.permisos || {},
-          avatarUrl: usuarioData.avatarUrl,
-        }),
+        body: JSON.stringify(payload),
       })
       return { data, error: null }
     } catch (error) {
@@ -61,6 +63,7 @@ export const usuariosService = {
         fechaIngreso: usuarioData.fechaIngreso,
         permisos: usuarioData.permisos || {},
         avatarUrl: usuarioData.avatarUrl,
+        sede_id: usuarioData.sede_id || undefined,
       }
       if (usuarioData.password) {
         payload.password = usuarioData.password

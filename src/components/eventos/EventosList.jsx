@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useHistorial } from '../../hooks/useHistorial'
+import { useAuth } from '../../hooks/useAuth'
 import EventoForm from '../reportes/EventoForm'
 import { 
   PlusIcon,
@@ -14,6 +15,8 @@ import './EventosList.css'
 
 const EventosList = () => {
   const { eventos, cargarEventos, loading } = useHistorial()
+  const { user } = useAuth()
+  const canWrite = user?.rol !== 'Invitado'
   const [showEventoForm, setShowEventoForm] = useState(false)
   const [eventoToEdit, setEventoToEdit] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -113,13 +116,15 @@ const EventosList = () => {
             Historial de eventos, fallas y observaciones de equipos médicos
           </p>
         </div>
-        <button 
-          onClick={handleNuevoEvento}
-          className="btn-nuevo-evento"
-        >
-          <PlusIcon className="btn-icon-small" />
-          Registrar Evento
-        </button>
+        {canWrite && (
+          <button 
+            onClick={handleNuevoEvento}
+            className="btn-nuevo-evento"
+          >
+            <PlusIcon className="btn-icon-small" />
+            Registrar Evento
+          </button>
+        )}
       </div>
 
       {/* Barra de búsqueda */}
@@ -136,14 +141,14 @@ const EventosList = () => {
       {/* Lista de eventos */}
       {filteredEventos.length === 0 ? (
         <div className="eventos-empty">
-          <DocumentTextIcon className="h-12 w-12 text-gray-400" />
+          <DocumentTextIcon className="h-10 w-10" aria-hidden />
           <p>No hay eventos registrados</p>
           {searchTerm && (
             <p className="eventos-empty-subtitle">
               No se encontraron eventos que coincidan con "{searchTerm}"
             </p>
           )}
-          {!searchTerm && (
+          {!searchTerm && canWrite && (
             <button 
               onClick={handleNuevoEvento}
               className="btn-nuevo-evento-empty"
@@ -218,15 +223,17 @@ const EventosList = () => {
                 )}
               </div>
 
-              <div className="evento-footer">
-                <button
-                  onClick={() => handleEditarEvento(evento)}
-                  className="btn-editar-evento"
-                >
-                  <EyeIcon className="h-4 w-4" />
-                  Editar
-                </button>
-              </div>
+              {canWrite && (
+                <div className="evento-footer">
+                  <button
+                    onClick={() => handleEditarEvento(evento)}
+                    className="btn-editar-evento"
+                  >
+                    <EyeIcon className="h-4 w-4" />
+                    Editar
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

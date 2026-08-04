@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 import { query } from '../db.js'
+import { isSuperuser } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -11,7 +12,16 @@ const loginSchema = z.object({
   password: z.string().min(1),
 })
 
-function mapUser(row) {
+async function mapUser(row) {
+  let sede = null
+  if (row.sede_id) {
+    const { rows } = await query(
+      `SELECT id, nombre, codigo, ciudad FROM sedes WHERE id = $1`,
+      [row.sede_id]
+    )
+    sede = rows[0] || null
+  }
+
   return {
     id: row.id,
     email: row.email,
@@ -23,7 +33,24 @@ function mapUser(row) {
     cargo: row.cargo,
     telefono: row.telefono,
     permisos: row.permisos || {},
+    sede_id: row.sede_id || null,
+    sede,
   }
+}
+
+async function listSedesForUser(user) {
+  if (isSuperuser(user)) {
+    const { rows } = await query(
+      `SELECT id, nombre, codigo, ciudad, activa FROM sedes WHERE activa = TRUE ORDER BY nombre`
+    )
+    return rows
+  }
+  if (!user.sede_id) return []
+  const { rows } = await query(
+    `SELECT id, nombre, codigo, ciudad, activa FROM sedes WHERE id = $1`,
+    [user.sede_id]
+  )
+  return rows
 }
 
 router.post('/login', async (req, res) => {
@@ -54,13 +81,21 @@ router.post('/login', async (req, res) => {
       [user.id]
     )
 
+    const mapped = await mapUser(user)
+    const sedes = await listSedesForUser(mapped)
+
     const token = jwt.sign(
-      { id: user.id, email: user.email, rol: user.rol },
+      {
+        id: user.id,
+        email: user.email,
+        rol: user.rol,
+        sede_id: user.sede_id || null,
+      },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     )
 
-    res.json({ token, user: mapUser(user) })
+    res.json({ token, user: mapped, sedes })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -87,7 +122,9 @@ router.get('/me', async (req, res) => {
     if (!rows[0]) {
       return res.status(401).json({ error: 'Usuario no encontrado' })
     }
-    res.json({ user: mapUser(rows[0]) })
+    const mapped = await mapUser(rows[0])
+    const sedes = await listSedesForUser(mapped)
+    res.json({ user: mapped, sedes })
   } catch {
     res.status(401).json({ error: 'Token inválido' })
   }

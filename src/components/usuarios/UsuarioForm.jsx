@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '../../hooks/useAuth'
 import './UsuarioForm.css'
 
 // Esquema de validación con Zod
@@ -13,7 +14,7 @@ const usuarioSchema = z.object({
   telefono: z.string().optional().or(z.literal('')),
   departamento: z.string().optional().or(z.literal('')),
   cargo: z.string().optional().or(z.literal('')),
-  rol: z.enum(['Administrador', 'Técnico', 'Invitado'], {
+  rol: z.enum(['Superusuario', 'Administrador', 'Técnico', 'Invitado'], {
     errorMap: () => ({ message: 'Selecciona un rol válido' })
   }),
   estado: z.enum(['Activo', 'Inactivo', 'Suspendido'], {
@@ -21,7 +22,8 @@ const usuarioSchema = z.object({
   }),
   fechaIngreso: z.string().optional().or(z.literal('')),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional().or(z.literal('')),
-  avatarUrl: z.string().url('URL inválida').optional().or(z.literal(''))
+  avatarUrl: z.string().url('URL inválida').optional().or(z.literal('')),
+  sede_id: z.string().optional().or(z.literal('')),
 })
 
 const UsuarioForm = ({ 
@@ -30,12 +32,13 @@ const UsuarioForm = ({
   onCancel, 
   loading = false 
 }) => {
+  const { isSuperuser, sedes, sedeId } = useAuth()
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue
+    watch,
   } = useForm({
     resolver: zodResolver(usuarioSchema),
     defaultValues: {
@@ -49,9 +52,12 @@ const UsuarioForm = ({
       estado: 'Activo',
       fechaIngreso: '',
       password: '',
-      avatarUrl: ''
-    }
+      avatarUrl: '',
+      sede_id: sedeId || '',
+    },
   })
+
+  const rolWatch = watch('rol')
 
   // Resetear formulario cuando cambie el usuario (para edición)
   useEffect(() => {
@@ -67,10 +73,11 @@ const UsuarioForm = ({
         estado: usuario.estado || 'Activo',
         fechaIngreso: usuario.fechaIngreso ? usuario.fechaIngreso.split('T')[0] : '',
         password: '',
-        avatarUrl: usuario.avatarUrl || ''
+        avatarUrl: usuario.avatarUrl || '',
+        sede_id: usuario.sede_id || sedeId || '',
       })
     }
-  }, [usuario, reset])
+  }, [usuario, reset, sedeId])
 
   const handleFormSubmit = (data) => {
     // Limpiar campos vacíos
@@ -257,11 +264,33 @@ const UsuarioForm = ({
                     <option value="Técnico">Técnico</option>
                     <option value="Invitado">Invitado</option>
                     <option value="Administrador">Administrador</option>
+                    {isSuperuser && (
+                      <option value="Superusuario">Superusuario</option>
+                    )}
                   </select>
                   {errors.rol && (
                     <span className="usuario-form-error">{errors.rol.message}</span>
                   )}
                 </div>
+
+                {isSuperuser && rolWatch !== 'Superusuario' && (
+                  <div className="usuario-form-group">
+                    <label htmlFor="sede_id" className="usuario-form-label">
+                      Sede *
+                    </label>
+                    <select
+                      id="sede_id"
+                      {...register('sede_id')}
+                      className="usuario-form-select"
+                    >
+                      {sedes.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="usuario-form-group">
                   <label htmlFor="estado" className="usuario-form-label">

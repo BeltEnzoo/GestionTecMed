@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline'
 import EquipoEventsChart from './EquipoEventsChart'
 import ExportButtons from '../reportes/ExportButtons'
+import { useAuth } from '../../hooks/useAuth'
 import './EquipoDetail.css'
 import './EquipoEventsChart.css'
 import '../reportes/ExportButtons.css'
@@ -25,6 +26,8 @@ import '../reportes/ExportButtons.css'
 const EquipoDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const canWrite = user?.rol !== 'Invitado'
   const { equipo, loading, error } = useEquipoDetail(id)
   const [activeTab, setActiveTab] = useState('info')
 
@@ -128,14 +131,18 @@ const EquipoDetail = () => {
           </button>
           
           <div className="header-actions">
-            <button className="btn-secondary">
-              <PencilIcon className="btn-icon" />
-              Editar
-            </button>
-            <button className="btn-danger">
-              <TrashIcon className="btn-icon" />
-              Eliminar
-            </button>
+            {canWrite && (
+              <>
+                <button className="btn-secondary">
+                  <PencilIcon className="btn-icon" />
+                  Editar
+                </button>
+                <button className="btn-danger">
+                  <TrashIcon className="btn-icon" />
+                  Eliminar
+                </button>
+              </>
+            )}
           </div>
         </div>
 

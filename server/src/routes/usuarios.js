@@ -1,7 +1,11 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { query } from '../db.js'
-import { requireRole, requireWriteAccess } from '../middleware/auth.js'
+import {
+  requireRole,
+  requireWriteAccess,
+  isSuperuser,
+} from '../middleware/auth.js'
 
 const router = Router()
 
@@ -22,22 +26,41 @@ function mapUser(row) {
     ultimoAcceso: row.ultimo_acceso,
     permisos: row.permisos || {},
     avatarUrl: row.avatar_url,
+    sede_id: row.sede_id || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
 }
 
-router.use(requireRole('Administrador'))
+router.use(requireRole('Superusuario', 'Administrador'))
 
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const { rows } = await query(
-      `SELECT id, email, nombre, apellido, telefono, departamento, cargo, rol,
-              estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url,
-              created_at, updated_at
-       FROM perfiles_usuarios
-       ORDER BY created_at DESC`
-    )
+    let rows
+    if (isSuperuser(req.user)) {
+      // En sede activa: usuarios de esa sede + superusuarios globales
+      const result = await query(
+        `SELECT id, email, nombre, apellido, telefono, departamento, cargo, rol,
+                estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url, sede_id,
+                created_at, updated_at
+         FROM perfiles_usuarios
+         WHERE sede_id = $1 OR rol = 'Superusuario'
+         ORDER BY created_at DESC`,
+        [req.sedeId]
+      )
+      rows = result.rows
+    } else {
+      const result = await query(
+        `SELECT id, email, nombre, apellido, telefono, departamento, cargo, rol,
+                estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url, sede_id,
+                created_at, updated_at
+         FROM perfiles_usuarios
+         WHERE sede_id = $1 AND rol <> 'Superusuario'
+         ORDER BY created_at DESC`,
+        [req.sedeId]
+      )
+      rows = result.rows
+    }
     res.json({ data: rows.map(mapUser) })
   } catch (error) {
     console.error(error)
@@ -45,17 +68,21 @@ router.get('/', async (_req, res) => {
   }
 })
 
-router.get('/stats', async (_req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    const { rows } = await query(`
+    const { rows } = await query(
+      `
       SELECT
-        COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE estado = 'Activo')::int AS activos,
-        COUNT(*) FILTER (WHERE rol = 'Administrador')::int AS administradores,
-        COUNT(*) FILTER (WHERE rol = 'Técnico')::int AS tecnicos,
-        COUNT(*) FILTER (WHERE rol = 'Invitado')::int AS invitados
+        COUNT(*) FILTER (WHERE sede_id = $1 OR (rol = 'Superusuario' AND $2))::int AS total,
+        COUNT(*) FILTER (WHERE estado = 'Activo' AND (sede_id = $1 OR rol = 'Superusuario'))::int AS activos,
+        COUNT(*) FILTER (WHERE rol = 'Administrador' AND sede_id = $1)::int AS administradores,
+        COUNT(*) FILTER (WHERE rol = 'Técnico' AND sede_id = $1)::int AS tecnicos,
+        COUNT(*) FILTER (WHERE rol = 'Invitado' AND sede_id = $1)::int AS invitados,
+        COUNT(*) FILTER (WHERE rol = 'Superusuario')::int AS superusuarios
       FROM perfiles_usuarios
-    `)
+    `,
+      [req.sedeId, isSuperuser(req.user)]
+    )
     res.json({ data: rows[0] })
   } catch (error) {
     console.error(error)
@@ -67,12 +94,19 @@ router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT id, email, nombre, apellido, telefono, departamento, cargo, rol,
-              estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url,
+              estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url, sede_id,
               created_at, updated_at
        FROM perfiles_usuarios WHERE id = $1`,
       [req.params.id]
     )
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
+    if (
+      !isSuperuser(req.user) &&
+      rows[0].sede_id !== req.sedeId &&
+      rows[0].rol !== 'Superusuario'
+    ) {
+      return res.status(404).json({ error: 'No encontrado' })
+    }
     res.json({ data: mapUser(rows[0]) })
   } catch (error) {
     console.error(error)
@@ -86,14 +120,29 @@ router.post('/', requireWriteAccess, async (req, res) => {
     if (!b.email || !b.password || !b.nombre || !b.apellido) {
       return res.status(400).json({ error: 'email, password, nombre y apellido son requeridos' })
     }
+
+    let rol = b.rol || 'Invitado'
+    let sedeId = b.sede_id || req.sedeId
+
+    if (!isSuperuser(req.user)) {
+      if (rol === 'Superusuario') {
+        return res.status(403).json({ error: 'No podés crear superusuarios' })
+      }
+      sedeId = req.sedeId
+    } else if (rol === 'Superusuario') {
+      sedeId = null
+    } else if (!sedeId) {
+      return res.status(400).json({ error: 'La sede es requerida' })
+    }
+
     const hash = await bcrypt.hash(b.password, 10)
     const { rows } = await query(
       `INSERT INTO perfiles_usuarios (
         email, password_hash, nombre, apellido, telefono, departamento, cargo,
-        rol, estado, fecha_ingreso, permisos, avatar_url, created_by
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        rol, estado, fecha_ingreso, permisos, avatar_url, created_by, sede_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
       RETURNING id, email, nombre, apellido, telefono, departamento, cargo, rol,
-                estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url,
+                estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url, sede_id,
                 created_at, updated_at`,
       [
         String(b.email).toLowerCase().trim(),
@@ -103,12 +152,13 @@ router.post('/', requireWriteAccess, async (req, res) => {
         b.telefono ?? null,
         b.departamento ?? null,
         b.cargo ?? null,
-        b.rol || 'Invitado',
+        rol,
         b.estado || 'Activo',
         b.fecha_ingreso || b.fechaIngreso || new Date().toISOString().split('T')[0],
         JSON.stringify(b.permisos || {}),
         b.avatar_url || b.avatarUrl || null,
         req.user?.id || null,
+        sedeId,
       ]
     )
     res.status(201).json({ data: mapUser(rows[0]) })
@@ -124,6 +174,29 @@ router.post('/', requireWriteAccess, async (req, res) => {
 router.put('/:id', requireWriteAccess, async (req, res) => {
   try {
     const b = req.body
+    const existing = await query(`SELECT * FROM perfiles_usuarios WHERE id = $1`, [
+      req.params.id,
+    ])
+    if (!existing.rows[0]) return res.status(404).json({ error: 'No encontrado' })
+
+    if (
+      !isSuperuser(req.user) &&
+      existing.rows[0].sede_id !== req.sedeId
+    ) {
+      return res.status(403).json({ error: 'Sin permisos sobre este usuario' })
+    }
+
+    let rol = b.rol
+    let sedeId = b.sede_id
+    if (!isSuperuser(req.user)) {
+      if (rol === 'Superusuario') {
+        return res.status(403).json({ error: 'No podés asignar Superusuario' })
+      }
+      sedeId = req.sedeId
+    } else if (rol === 'Superusuario') {
+      sedeId = null
+    }
+
     let passwordHash = null
     if (b.password) {
       passwordHash = await bcrypt.hash(b.password, 10)
@@ -142,10 +215,11 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
         estado = COALESCE($9, estado),
         fecha_ingreso = COALESCE($10, fecha_ingreso),
         permisos = COALESCE($11, permisos),
-        avatar_url = COALESCE($12, avatar_url)
-      WHERE id = $13
+        avatar_url = COALESCE($12, avatar_url),
+        sede_id = COALESCE($13, sede_id)
+      WHERE id = $14
       RETURNING id, email, nombre, apellido, telefono, departamento, cargo, rol,
-                estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url,
+                estado, fecha_ingreso, ultimo_acceso, permisos, avatar_url, sede_id,
                 created_at, updated_at`,
       [
         b.email ? String(b.email).toLowerCase().trim() : null,
@@ -155,15 +229,22 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
         b.telefono,
         b.departamento,
         b.cargo,
-        b.rol,
+        rol,
         b.estado,
         b.fecha_ingreso || b.fechaIngreso || null,
         b.permisos !== undefined ? JSON.stringify(b.permisos) : null,
         b.avatar_url || b.avatarUrl || null,
+        sedeId === undefined ? null : sedeId,
         req.params.id,
       ]
     )
-    if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
+    // Fix: COALESCE won't set null sede for Superusuario when sedeId is null intentionally
+    if (isSuperuser(req.user) && rol === 'Superusuario') {
+      await query(`UPDATE perfiles_usuarios SET sede_id = NULL WHERE id = $1`, [
+        req.params.id,
+      ])
+    }
+
     res.json({ data: mapUser(rows[0]) })
   } catch (error) {
     console.error(error)
@@ -179,10 +260,17 @@ router.delete('/:id', requireWriteAccess, async (req, res) => {
     if (req.params.id === req.user.id) {
       return res.status(400).json({ error: 'No podés eliminar tu propio usuario' })
     }
-    const result = await query(`DELETE FROM perfiles_usuarios WHERE id = $1`, [
+    const existing = await query(`SELECT * FROM perfiles_usuarios WHERE id = $1`, [
       req.params.id,
     ])
-    if (result.rowCount === 0) return res.status(404).json({ error: 'No encontrado' })
+    if (!existing.rows[0]) return res.status(404).json({ error: 'No encontrado' })
+    if (
+      !isSuperuser(req.user) &&
+      existing.rows[0].sede_id !== req.sedeId
+    ) {
+      return res.status(403).json({ error: 'Sin permisos' })
+    }
+    await query(`DELETE FROM perfiles_usuarios WHERE id = $1`, [req.params.id])
     res.json({ data: true })
   } catch (error) {
     console.error(error)

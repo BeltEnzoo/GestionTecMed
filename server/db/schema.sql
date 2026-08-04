@@ -10,9 +10,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- ===================== SEDES =====================
+CREATE TABLE IF NOT EXISTS sedes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre VARCHAR(150) NOT NULL UNIQUE,
+  codigo VARCHAR(50) UNIQUE,
+  ciudad VARCHAR(100),
+  activa BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+DROP TRIGGER IF EXISTS update_sedes_updated_at ON sedes;
+CREATE TRIGGER update_sedes_updated_at
+  BEFORE UPDATE ON sedes
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- ===================== EQUIPOS =====================
 CREATE TABLE IF NOT EXISTS equipos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sede_id UUID REFERENCES sedes(id),
   nombre TEXT,
   marca TEXT,
   modelo TEXT,
@@ -46,10 +63,6 @@ CREATE TABLE IF NOT EXISTS equipos (
   created_by UUID
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_equipos_numero_serie
-  ON equipos (numero_serie) WHERE numero_serie IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS uq_equipos_codigo_interno
-  ON equipos (codigo_interno) WHERE codigo_interno IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_equipos_estado ON equipos(estado);
 CREATE INDEX IF NOT EXISTS idx_equipos_departamento ON equipos(departamento);
 CREATE INDEX IF NOT EXISTS idx_equipos_nombre ON equipos(nombre);
@@ -147,13 +160,14 @@ CREATE TABLE IF NOT EXISTS perfiles_usuarios (
   departamento VARCHAR(100),
   cargo VARCHAR(100),
   rol VARCHAR(50) DEFAULT 'Invitado' CHECK (rol IN (
-    'Administrador', 'Técnico', 'Invitado'
+    'Superusuario', 'Administrador', 'Técnico', 'Invitado'
   )),
   estado VARCHAR(20) DEFAULT 'Activo' CHECK (estado IN ('Activo', 'Inactivo', 'Suspendido')),
   fecha_ingreso DATE DEFAULT CURRENT_DATE,
   ultimo_acceso TIMESTAMPTZ,
   permisos JSONB DEFAULT '{}'::jsonb,
   avatar_url TEXT,
+  sede_id UUID REFERENCES sedes(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   created_by UUID
@@ -171,6 +185,7 @@ CREATE TRIGGER update_perfiles_usuarios_updated_at
 -- ===================== STOCK =====================
 CREATE TABLE IF NOT EXISTS stock_insumos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sede_id UUID REFERENCES sedes(id),
   nombre TEXT NOT NULL,
   descripcion TEXT,
   categoria TEXT NOT NULL DEFAULT 'Insumo',
@@ -201,6 +216,7 @@ CREATE TRIGGER update_stock_insumos_updated_at
 -- ===================== ARCHIVOS (para Vercel serverless, sin disco) =====================
 CREATE TABLE IF NOT EXISTS archivo_blobs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sede_id UUID REFERENCES sedes(id),
   equipo_id TEXT,
   filename TEXT NOT NULL,
   mime_type TEXT,

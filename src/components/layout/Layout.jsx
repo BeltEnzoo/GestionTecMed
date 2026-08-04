@@ -20,7 +20,7 @@ import "./Layout.css";
 const Layout = ({ children }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, sedes, sedeActiva, setSedeActiva, canManageUsers, isSuperuser } = useAuth();
 
   const isNavActive = (href) => {
     if (href === "/") return location.pathname === "/";
@@ -39,13 +39,9 @@ const Layout = ({ children }) => {
     { name: "Reportes", href: "/reportes", icon: ChartBarIcon },
   ];
 
-  const adminNavigation = [
-    ...baseNavigation,
-    { name: "Usuarios", href: "/usuarios", icon: UserGroupIcon },
-  ];
-
-  const navigation =
-    user?.rol === "Administrador" ? adminNavigation : baseNavigation;
+  const navigation = canManageUsers
+    ? [...baseNavigation, { name: "Usuarios", href: "/usuarios", icon: UserGroupIcon }]
+    : baseNavigation;
 
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -97,6 +93,36 @@ const Layout = ({ children }) => {
           </button>
         </div>
         <nav className="sidebar-nav" aria-label="Principal">
+          {sedes?.length > 0 && (
+            <div className="sede-selector-block" style={{ padding: '0 1rem 1rem' }}>
+              <p className="nav-section-label">Sede</p>
+              {isSuperuser && sedes.length > 1 ? (
+                <select
+                  className="sede-select"
+                  value={sedeActiva?.id || ''}
+                  onChange={(e) => setSedeActiva(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #cbd5e1)',
+                    background: 'var(--surface, #fff)',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {sedes.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="user-role" style={{ margin: 0 }}>
+                  {sedeActiva?.nombre || user?.sede?.nombre || 'Sin sede'}
+                </p>
+              )}
+            </div>
+          )}
           <div>
             <p className="nav-section-label">Menú</p>
             <div className="nav-menu">

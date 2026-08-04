@@ -33,10 +33,25 @@ async function attachEquipos(rows) {
   return rows.map((r) => ({ ...r, equipos: map[r.equipo_id] || null }))
 }
 
-router.get('/', async (_req, res) => {
+async function resolveEquipoInSede(equipoRef, sedeId) {
+  if (!equipoRef) return null
+  const { rows } = await query(
+    `SELECT id FROM equipos
+     WHERE sede_id = $1 AND (id::text = $2 OR nombre = $2)
+     LIMIT 1`,
+    [sedeId, String(equipoRef)]
+  )
+  return rows[0]?.id || null
+}
+
+router.get('/', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM mantenimientos ORDER BY created_at DESC`
+      `SELECT m.* FROM mantenimientos m
+       INNER JOIN equipos e ON e.id = m.equipo_id
+       WHERE e.sede_id = $1
+       ORDER BY m.created_at DESC`,
+      [req.sedeId]
     )
     res.json({ data: await attachEquipos(rows) })
   } catch (error) {
@@ -47,9 +62,12 @@ router.get('/', async (_req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const { rows } = await query(`SELECT * FROM mantenimientos WHERE id = $1`, [
-      req.params.id,
-    ])
+    const { rows } = await query(
+      `SELECT m.* FROM mantenimientos m
+       INNER JOIN equipos e ON e.id = m.equipo_id
+       WHERE m.id = $1 AND e.sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
     const [item] = await attachEquipos(rows)
     res.json({ data: item })
@@ -62,14 +80,9 @@ router.get('/:id', async (req, res) => {
 router.post('/', requireWriteAccess, async (req, res) => {
   try {
     const b = req.body
-    let equipoId = b.equipo_id || null
-
-    if (!equipoId && b.equipo) {
-      const found = await query(
-        `SELECT id FROM equipos WHERE nombre = $1 OR id::text = $1 LIMIT 1`,
-        [b.equipo]
-      )
-      equipoId = found.rows[0]?.id || null
+    const equipoId = await resolveEquipoInSede(b.equipo_id || b.equipo, req.sedeId)
+    if (!equipoId) {
+      return res.status(400).json({ error: 'Equipo inválido para esta sede' })
     }
 
     const estado = normalizeEstado(b.estado)
@@ -106,14 +119,21 @@ router.post('/', requireWriteAccess, async (req, res) => {
 router.put('/:id', requireWriteAccess, async (req, res) => {
   try {
     const b = req.body
-    let equipoId = b.equipo_id
-    if (b.equipo && !equipoId) {
-      const found = await query(
-        `SELECT id FROM equipos WHERE nombre = $1 OR id::text = $1 LIMIT 1`,
-        [b.equipo]
-      )
-      equipoId = found.rows[0]?.id
+    let equipoId
+    if (b.equipo_id !== undefined || b.equipo !== undefined) {
+      equipoId = await resolveEquipoInSede(b.equipo_id || b.equipo, req.sedeId)
+      if (!equipoId) {
+        return res.status(400).json({ error: 'Equipo inválido para esta sede' })
+      }
     }
+
+    const ownership = await query(
+      `SELECT m.id FROM mantenimientos m
+       INNER JOIN equipos e ON e.id = m.equipo_id
+       WHERE m.id = $1 AND e.sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
+    if (!ownership.rows[0]) return res.status(404).json({ error: 'No encontrado' })
 
     const estado = b.estado !== undefined ? normalizeEstado(b.estado) : undefined
     let fechaCompletado = b.fecha_completado
@@ -147,7 +167,6 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
         req.params.id,
       ]
     )
-    if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
     const [item] = await attachEquipos(rows)
     res.json({ data: item })
   } catch (error) {
@@ -158,9 +177,12 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
 
 router.delete('/:id', requireWriteAccess, async (req, res) => {
   try {
-    const result = await query(`DELETE FROM mantenimientos WHERE id = $1`, [
-      req.params.id,
-    ])
+    const result = await query(
+      `DELETE FROM mantenimientos m
+       USING equipos e
+       WHERE m.equipo_id = e.id AND m.id = $1 AND e.sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (result.rowCount === 0) return res.status(404).json({ error: 'No encontrado' })
     res.json({ data: true })
   } catch (error) {

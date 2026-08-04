@@ -36,8 +36,8 @@
   
   /* Button adjustments */
   .btn-responsive {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.875rem;
+    padding: var(--btn-pad-y, 0.45rem) var(--btn-pad-x, 0.9rem);
+    font-size: var(--btn-font, 0.8125rem);
   }
   
   /* Card adjustments */
@@ -69,22 +69,22 @@
   
   /* Text adjustments */
   .text-responsive-lg {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
   }
   
   .text-responsive-xl {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
   }
   
   /* Button adjustments */
   .btn-responsive {
-    padding: 1rem 2rem;
-    font-size: 1rem;
+    padding: var(--btn-pad-y, 0.45rem) var(--btn-pad-x, 0.9rem);
+    font-size: var(--btn-font, 0.8125rem);
   }
   
   /* Card adjustments */
   .card-responsive {
-    padding: 2rem;
+    padding: 1.25rem;
   }
 }
 

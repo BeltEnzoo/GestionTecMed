@@ -2,8 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 
-import { requireAuth } from './middleware/auth.js'
+import { requireAuth, resolveSede } from './middleware/auth.js'
 import authRoutes from './routes/auth.js'
+import sedesRoutes from './routes/sedes.js'
 import equiposRoutes from './routes/equipos.js'
 import mantenimientosRoutes from './routes/mantenimientos.js'
 import eventosRoutes from './routes/eventos.js'
@@ -24,12 +25,15 @@ export function createApp() {
     res.json({ ok: true, service: 'gestion-parque-api' })
   })
 
-  // Archivos públicos por UUID (no requieren JWT para <img src>)
   app.get('/api/uploads/file/:id', getFileHandler)
 
   app.use('/api/auth', authRoutes)
 
   app.use('/api', requireAuth)
+  // Listar/crear sedes no exige sede activa (el Superusuario elige después)
+  app.use('/api/sedes', sedesRoutes)
+
+  app.use('/api', resolveSede)
   app.use('/api/equipos', equiposRoutes)
   app.use('/api/mantenimientos', mantenimientosRoutes)
   app.use('/api/eventos', eventosRoutes)

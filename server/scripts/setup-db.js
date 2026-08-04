@@ -9,18 +9,23 @@ dotenv.config()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+async function runSqlFile(filePath, label) {
+  const sql = fs.readFileSync(filePath, 'utf8')
+  console.log(`Aplicando ${label}...`)
+  await pool.query(sql)
+  console.log(`${label} OK`)
+}
+
 async function main() {
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL no está configurada en server/.env')
     process.exit(1)
   }
 
-  const schemaPath = path.join(__dirname, '../db/schema.sql')
-  const schema = fs.readFileSync(schemaPath, 'utf8')
-
-  console.log('Aplicando schema.sql...')
-  await pool.query(schema)
-  console.log('Schema OK')
+  // 1) Migración primero (ALTER / seed sedes) para DBs ya existentes
+  await runSqlFile(path.join(__dirname, '../db/migrate_sedes.sql'), 'migrate_sedes.sql')
+  // 2) Schema idempotente (CREATE IF NOT EXISTS)
+  await runSqlFile(path.join(__dirname, '../db/schema.sql'), 'schema.sql')
 
   const email = (process.env.ADMIN_EMAIL || 'admin@hospital.com').toLowerCase()
   const password = process.env.ADMIN_PASSWORD || 'admin123'
@@ -34,28 +39,35 @@ async function main() {
   if (existing.rows.length === 0) {
     await query(
       `INSERT INTO perfiles_usuarios (
-        email, password_hash, nombre, apellido, departamento, cargo, rol, estado, permisos
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        email, password_hash, nombre, apellido, departamento, cargo, rol, estado, sede_id, permisos
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULL, $9)`,
       [
         email,
         hash,
         'Administrador',
         'Sistema',
         'Tecnología Médica',
-        'Administrador de Sistema',
-        'Administrador',
+        'Superusuario',
+        'Superusuario',
         'Activo',
         JSON.stringify({
           equipos: 'full',
           mantenimientos: 'full',
           reportes: 'full',
           usuarios: 'full',
+          sedes: 'full',
         }),
       ]
     )
-    console.log(`Admin creado: ${email} / ${password}`)
+    console.log(`Superusuario creado: ${email} / ${password}`)
   } else {
-    console.log(`Admin ya existe: ${email}`)
+    await query(
+      `UPDATE perfiles_usuarios
+       SET rol = 'Superusuario', sede_id = NULL
+       WHERE email = $1`,
+      [email]
+    )
+    console.log(`Usuario ${email} promovido a Superusuario`)
   }
 
   console.log('db:setup completado')

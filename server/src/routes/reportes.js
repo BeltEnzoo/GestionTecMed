@@ -14,10 +14,19 @@ function normalizarEstado(estado) {
   return e
 }
 
-router.get('/generales', async (_req, res) => {
+router.get('/generales', async (req, res) => {
   try {
-    const equipos = (await query(`SELECT * FROM equipos`)).rows
-    const mantenimientos = (await query(`SELECT * FROM mantenimientos`)).rows
+    const equipos = (
+      await query(`SELECT * FROM equipos WHERE sede_id = $1`, [req.sedeId])
+    ).rows
+    const mantenimientos = (
+      await query(
+        `SELECT m.* FROM mantenimientos m
+         INNER JOIN equipos e ON e.id = m.equipo_id
+         WHERE e.sede_id = $1`,
+        [req.sedeId]
+      )
+    ).rows
 
     const totalEquipos = equipos.length
     const equiposActivos = equipos.filter((e) => normalizarEstado(e.estado) === 'activo').length
@@ -81,17 +90,28 @@ router.get('/generales', async (_req, res) => {
   }
 })
 
-router.get('/dashboard', async (_req, res) => {
+router.get('/dashboard', async (req, res) => {
   try {
-    const equipos = (await query(`SELECT * FROM equipos`)).rows
-    const mantenimientos = (await query(`SELECT * FROM mantenimientos`)).rows
+    const equipos = (
+      await query(`SELECT * FROM equipos WHERE sede_id = $1`, [req.sedeId])
+    ).rows
+    const mantenimientos = (
+      await query(
+        `SELECT m.* FROM mantenimientos m
+         INNER JOIN equipos e ON e.id = m.equipo_id
+         WHERE e.sede_id = $1`,
+        [req.sedeId]
+      )
+    ).rows
     const eventos = (
       await query(
-        `SELECT e.*, eq.nombre AS equipo_nombre
-         FROM historial_eventos e
-         LEFT JOIN equipos eq ON eq.id = e.equipo_id
-         ORDER BY e.fecha_evento DESC
-         LIMIT 20`
+        `SELECT ev.*, eq.nombre AS equipo_nombre
+         FROM historial_eventos ev
+         INNER JOIN equipos eq ON eq.id = ev.equipo_id
+         WHERE eq.sede_id = $1
+         ORDER BY ev.fecha_evento DESC
+         LIMIT 20`,
+        [req.sedeId]
       )
     ).rows
 
@@ -134,15 +154,17 @@ router.get('/dashboard', async (_req, res) => {
 router.get('/mantenimientos', async (req, res) => {
   try {
     const { fechaInicio, fechaFin } = req.query
-    let sql = `SELECT * FROM mantenimientos WHERE 1=1`
-    const params = []
+    let sql = `SELECT m.* FROM mantenimientos m
+               INNER JOIN equipos e ON e.id = m.equipo_id
+               WHERE e.sede_id = $1`
+    const params = [req.sedeId]
     if (fechaInicio) {
       params.push(fechaInicio)
-      sql += ` AND fecha_completado >= $${params.length}`
+      sql += ` AND m.fecha_completado >= $${params.length}`
     }
     if (fechaFin) {
       params.push(fechaFin)
-      sql += ` AND fecha_completado <= $${params.length}`
+      sql += ` AND m.fecha_completado <= $${params.length}`
     }
     const { rows: data } = await query(sql, params)
 

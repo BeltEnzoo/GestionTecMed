@@ -31,7 +31,7 @@ function App() {
                 <Route path="/stock" element={<StockList />} />
                 <Route path="/reportes" element={<ReportesList />} />
                 <Route path="/usuarios" element={
-                  <ProtectedRoute requiredRole="Administrador">
+                  <ProtectedRoute requireManageUsers>
                     <UsuariosList />
                   </ProtectedRoute>
                 } />

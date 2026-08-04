@@ -8,37 +8,37 @@
 }
 
 .dashboard-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.25rem;
   text-align: left;
 }
 
 .dashboard-title {
-  font-size: 2.5rem;
+  font-size: var(--fs-page-title, 1.35rem);
   font-weight: 700;
   color: #0f172a;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.03em;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.02em;
 }
 
 .dashboard-subtitle {
   color: #64748b;
-  font-size: 1.125rem;
+  font-size: var(--fs-page-subtitle, 0.875rem);
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .stat-card {
   background: #ffffff;
-  border-radius: var(--radius-lg, 1rem);
+  border-radius: var(--radius-lg, 0.75rem);
   border: 1px solid #e2e8f0;
-  padding: 1.75rem;
+  padding: 1rem 1.15rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   position: relative;
   overflow: hidden;
@@ -102,30 +102,30 @@
 }
 
 .stat-value {
-  font-size: 2.5rem;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .activity-section {
-  margin-top: 3rem;
+  margin-top: 1.5rem;
 }
 
 .activity-card {
   background: #ffffff;
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;
-  padding: 1.75rem;
+  padding: 1.15rem;
 }
 
 .activity-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -194,28 +194,28 @@
 /* Tablet styles */
 @media (min-width: 640px) {
   .dashboard-title {
-    font-size: 3rem;
+    font-size: var(--fs-page-title, 1.4rem);
   }
   
   .dashboard-subtitle {
-    font-size: 1.25rem;
+    font-size: var(--fs-page-subtitle, 0.9rem);
   }
   
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.75rem;
+    gap: 1rem;
   }
   
   .stat-card {
-    padding: 2rem;
+    padding: 1.15rem;
   }
   
   .stat-value {
-    font-size: 3rem;
+    font-size: 1.6rem;
   }
   
   .activity-card {
-    padding: 2rem;
+    padding: 1.25rem;
   }
 }
 
@@ -223,92 +223,52 @@
 @media (min-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    gap: 1.15rem;
   }
   
   .stat-value {
-    font-size: 3.5rem;
+    font-size: 1.75rem;
   }
 }
 
 /* Large desktop styles */
 @media (min-width: 1280px) {
   .stat-card {
-    padding: 2.25rem;
+    padding: 1.25rem;
   }
   
   .stat-value {
-    font-size: 4rem;
+    font-size: 1.85rem;
   }
   
   .activity-card {
-    padding: 2.5rem;
+    padding: 1.35rem;
   }
 }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .dashboard-header {
-    margin-bottom: 2rem;
-    padding-left: 4rem;
+    margin-bottom: 1.25rem;
+    padding-left: 3.5rem;
   }
   
   .dashboard-title {
-    font-size: 1.875rem;
+    font-size: 1.25rem;
   }
   
   .dashboard-subtitle {
-    font-size: 1rem;
+    font-size: 0.85rem;
   }
   
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2.5rem;
-  }
-  
-  .stat-card {
-    padding: 1.5rem;
-  }
-  
-  .stat-label {
-    font-size: 0.8125rem;
-  }
-  
-  .stat-value {
-    font-size: 2rem;
-  }
-  
-  .activity-section {
-    margin-top: 2.5rem;
-  }
-  
-  .activity-card {
-    padding: 1.5rem;
-  }
-  
-  .activity-title {
-    font-size: 1.125rem;
+    gap: 0.75rem;
     margin-bottom: 1.25rem;
   }
   
-  .activity-list {
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-header {
-    padding-left: 4.5rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
   .stat-card {
-    padding: 1.25rem;
+    padding: 0.9rem;
   }
   
   .stat-label {
@@ -316,7 +276,47 @@
   }
   
   .stat-value {
-    font-size: 1.75rem;
+    font-size: 1.35rem;
+  }
+  
+  .activity-section {
+    margin-top: 1.25rem;
+  }
+  
+  .activity-card {
+    padding: 1rem;
+  }
+  
+  .activity-title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .activity-list {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding-left: 3.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 0.85rem;
+  }
+  
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .stat-value {
+    font-size: 1.35rem;
   }
   
   .activity-card {

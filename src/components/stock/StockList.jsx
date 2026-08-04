@@ -8,6 +8,7 @@ import "./StockList.css";
 
 const StockList = () => {
   const { user } = useAuth();
+  const canWrite = user?.rol !== 'Invitado';
   const [stock, setStock] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,10 +159,12 @@ const StockList = () => {
             <DocumentArrowDownIcon className="btn-icon-small" />
             Exportar PDF
           </button>
-          <button onClick={handleNewStock} className="btn-nuevo-stock">
-            <PlusIcon className="btn-icon-small" />
-            Nuevo Insumo
-          </button>
+          {canWrite && (
+            <button onClick={handleNewStock} className="btn-nuevo-stock">
+              <PlusIcon className="btn-icon-small" />
+              Nuevo Insumo
+            </button>
+          )}
         </div>
       </div>
 
@@ -242,22 +245,24 @@ const StockList = () => {
                       </span>
                     </td>
                     <td>
-                      <div className="stock-actions">
-                        <button
-                          onClick={() => handleEditStock(item)}
-                          className="btn-action btn-edit"
-                          title="Editar"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteStock(item)}
-                          className="btn-action btn-delete"
-                          title="Eliminar"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </div>
+                      {canWrite && (
+                        <div className="stock-actions">
+                          <button
+                            onClick={() => handleEditStock(item)}
+                            className="btn-action btn-edit"
+                            title="Editar"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStock(item)}
+                            className="btn-action btn-delete"
+                            title="Eliminar"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

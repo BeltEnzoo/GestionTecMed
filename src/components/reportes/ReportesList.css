@@ -12,14 +12,14 @@
 }
 
 .reportes-title {
-  font-size: 2rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .reportes-subtitle {
-  font-size: 1.125rem;
+  font-size: 0.875rem;
   color: #6b7280;
   margin: 0;
 }
@@ -154,7 +154,7 @@
 }
 
 .stat-number {
-  font-size: 2rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #111827;
   margin: 0 0 0.25rem 0;
@@ -391,7 +391,7 @@
 }
 
 .attention-count {
-  font-size: 2rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #dc2626;
   margin-bottom: 1rem;

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import MantenimientoForm from './MantenimientoForm';
 import './MantenimientosList.css';
 
 const MantenimientosList = () => {
+  const { user } = useAuth();
+  const canWrite = user?.rol !== 'Invitado';
   const [mantenimientos, setMantenimientos] = useState([]);
   const [equipos, setEquipos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,9 +130,11 @@ const MantenimientosList = () => {
           <h1>Mantenimientos</h1>
           <p>Gestión de mantenimientos preventivos y correctivos</p>
         </div>
-        <button className="btn btn-primary" onClick={handleCreate}>
-          + Nuevo Mantenimiento
-        </button>
+        {canWrite && (
+          <button className="btn btn-primary" onClick={handleCreate}>
+            + Nuevo Mantenimiento
+          </button>
+        )}
       </div>
 
       <div className="mantenimientos-filters">
@@ -206,22 +211,24 @@ const MantenimientosList = () => {
                   {mantenimiento.costo ? `$${mantenimiento.costo.toFixed(2)}` : '-'}
                 </td>
                 <td>
-                  <div className="action-buttons">
-                    <button 
-                      className="btn btn-warning btn-sm"
-                      onClick={() => handleEdit(mantenimiento)}
-                      title="Editar mantenimiento"
-                    >
-                      Editar
-                    </button>
-                    <button 
-                      className="btn btn-danger btn-sm"
-                      onClick={() => handleDelete(mantenimiento.id)}
-                      title="Eliminar mantenimiento"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                  {canWrite && (
+                    <div className="action-buttons">
+                      <button 
+                        className="btn btn-warning btn-sm"
+                        onClick={() => handleEdit(mantenimiento)}
+                        title="Editar mantenimiento"
+                      >
+                        Editar
+                      </button>
+                      <button 
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(mantenimiento.id)}
+                        title="Eliminar mantenimiento"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

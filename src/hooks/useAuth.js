@@ -1,68 +1,69 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { authServiceSimple } from '../services/authServiceSimple'
 
 export const useAuth = () => {
   const [user, setUser] = useState(null)
+  const [sedes, setSedes] = useState([])
+  const [sedeId, setSedeIdState] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    // Verificar si hay una sesión activa al cargar la aplicación
-    const checkSession = () => {
-      try {
-        const currentUser = authServiceSimple.getCurrentUser()
-        console.log('🔍 checkSession: Usuario actual:', currentUser ? 'Sí' : 'No')
-        setUser(currentUser)
-      } catch (err) {
-        setError(err.message)
-        setUser(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkSession()
-
-    // Escuchar cambios en el localStorage para detectar logout
-    const handleStorageChange = (e) => {
-      if (e.key === 'user' || e.key === 'isAuthenticated') {
-        checkSession()
-      }
-    }
-
-    // Escuchar eventos de storage
-    window.addEventListener('storage', handleStorageChange)
-    
-    // También escuchar cambios en el mismo tab (custom event)
-    const handleCustomStorageChange = () => {
-      checkSession()
-    }
-    
-    window.addEventListener('localStorageChange', handleCustomStorageChange)
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('localStorageChange', handleCustomStorageChange)
+  const refresh = useCallback(() => {
+    try {
+      const currentUser = authServiceSimple.getCurrentUser()
+      setUser(currentUser)
+      setSedes(authServiceSimple.getSedes())
+      setSedeIdState(authServiceSimple.getSedeId())
+    } catch (err) {
+      setError(err.message)
+      setUser(null)
+      setSedes([])
+      setSedeIdState(null)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
+  useEffect(() => {
+    refresh()
+
+    const handleStorageChange = (e) => {
+      if (
+        !e.key ||
+        e.key === 'user' ||
+        e.key === 'isAuthenticated' ||
+        e.key === 'sedeId' ||
+        e.key === 'sedes'
+      ) {
+        refresh()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('localStorageChange', refresh)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('localStorageChange', refresh)
+    }
+  }, [refresh])
+
   const signIn = async (email, password) => {
     try {
-      console.log('🔄 useAuth.signIn: Iniciando login...')
       setLoading(true)
       setError(null)
-      const { user: userData, error } = await authServiceSimple.signIn(email, password)
-      if (error) throw error
-      console.log('✅ useAuth.signIn: Usuario establecido:', userData)
+      const { user: userData, sedes: userSedes, error: err } =
+        await authServiceSimple.signIn(email, password)
+      if (err) throw new Error(err)
       setUser(userData)
+      setSedes(userSedes || [])
+      setSedeIdState(authServiceSimple.getSedeId())
       return { data: userData, error: null }
     } catch (err) {
-      console.error('❌ useAuth.signIn: Error:', err)
       setError(err.message)
       return { data: null, error: err.message }
     } finally {
       setLoading(false)
-      console.log('🔄 useAuth.signIn: Loading terminado')
     }
   }
 
@@ -70,9 +71,11 @@ export const useAuth = () => {
     try {
       setLoading(true)
       setError(null)
-      const { error } = await authServiceSimple.signOut()
-      if (error) throw error
+      const { error: err } = await authServiceSimple.signOut()
+      if (err) throw new Error(err)
       setUser(null)
+      setSedes([])
+      setSedeIdState(null)
       return { error: null }
     } catch (err) {
       setError(err.message)
@@ -82,17 +85,30 @@ export const useAuth = () => {
     }
   }
 
-  const hasPermission = (permission) => {
-    return authServiceSimple.hasPermission(permission)
+  const setSedeActiva = (id) => {
+    authServiceSimple.setSedeId(id)
+    setSedeIdState(id)
+    // Recargar datos filtrados por la nueva sede
+    window.location.reload()
   }
+
+  const hasPermission = (permission) => authServiceSimple.hasPermission(permission)
+
+  const sedeActiva = sedes.find((s) => s.id === sedeId) || null
 
   return {
     user,
+    sedes,
+    sedeId,
+    sedeActiva,
+    setSedeActiva,
     loading,
     error,
     signIn,
     signOut,
     hasPermission,
-    isAuthenticated: !!user
+    canManageUsers: authServiceSimple.canManageUsers(),
+    isSuperuser: user?.rol === 'Superusuario',
+    isAuthenticated: !!user,
   }
 }

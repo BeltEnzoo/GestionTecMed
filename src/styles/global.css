@@ -37,45 +37,123 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 1.5rem;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
 }
 
 h3 {
-  font-size: 1.125rem;
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
 }
 
-/* Tablet typography */
+/* Tipografía fluida — sin saltos grandes en desktop */
 @media (min-width: 640px) {
-  h1 {
-    font-size: 1.875rem;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
-  
-  h3 {
-    font-size: 1.25rem;
-  }
+  h1 { font-size: clamp(1.2rem, 1.8vw, 1.45rem); }
+  h2 { font-size: clamp(1.05rem, 1.5vw, 1.25rem); }
+  h3 { font-size: 1.05rem; }
 }
 
-/* Desktop typography */
 @media (min-width: 1024px) {
-  h1 {
-    font-size: 2.25rem;
-  }
-  
-  h2 {
-    font-size: 1.875rem;
-  }
-  
-  h3 {
-    font-size: 1.5rem;
-  }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 1.05rem; }
+}
+
+/* Densidad de páginas (listas) */
+.page-title,
+.eventos-title,
+.equipos-title,
+.stock-title,
+.reportes-title,
+.usuarios-title,
+.mantenimientos-header h1 {
+  font-size: var(--fs-page-title) !important;
+  line-height: 1.3 !important;
+  margin-bottom: 0.25rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+.page-subtitle,
+.eventos-subtitle,
+.equipos-subtitle,
+.stock-subtitle,
+.reportes-subtitle,
+.mantenimientos-header p {
+  font-size: var(--fs-page-subtitle) !important;
+  color: var(--color-text-muted) !important;
+  font-family: var(--font-sans) !important;
+  font-style: normal !important;
+}
+
+/* Controles y botones más compactos en toda la app */
+button:not(.mobile-menu-btn):not(.sidebar-close-btn):not(.logout-btn):not(.nav-item):not(.login-submit-btn):not(.login-form-password-toggle):not(.carousel-nav):not(.indicator),
+.btn,
+.btn-nuevo-evento,
+.btn-nuevo-evento-empty,
+.btn-editar-evento,
+.btn-nuevo-stock,
+.btn-export-pdf,
+.new-equipo-btn,
+.usuarios-btn-create {
+  font-size: var(--btn-font) !important;
+  padding: var(--btn-pad-y) var(--btn-pad-x) !important;
+  border-radius: var(--radius-md) !important;
+  line-height: 1.25 !important;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+select,
+textarea,
+.search-input,
+.eventos-search-input,
+.form-input,
+.form-select {
+  font-size: var(--fs-body) !important;
+  padding: var(--control-pad-y) var(--control-pad-x) !important;
+  border-radius: var(--radius-md) !important;
+  line-height: 1.35 !important;
+}
+
+/* Iconos de estado vacío — no gigantes */
+.eventos-empty svg,
+.stock-empty svg,
+.equipos-empty-mobile svg,
+.usuarios-empty svg,
+.usuarios-empty-content svg,
+.empty-state svg,
+.empty-icon,
+[class*="-empty"] > svg {
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  max-width: 2.5rem !important;
+  max-height: 2.5rem !important;
+  flex-shrink: 0;
+}
+
+.eventos-empty,
+.stock-empty,
+.empty-state,
+.usuarios-empty {
+  padding: 2rem 1rem !important;
+}
+
+.eventos-container,
+.stock-container,
+.reportes-container,
+.usuarios-list,
+.mantenimientos-container {
+  padding: var(--page-pad) !important;
+}
+
+.stat-number {
+  font-size: 1.35rem !important;
 }
 
 /* Responsive spacing utilities */
@@ -257,9 +335,9 @@ h3 {
 .text-sm { font-size: 0.875rem; }
 .text-base { font-size: 1rem; }
 .text-lg { font-size: 1.125rem; }
-.text-xl { font-size: 1.25rem; }
-.text-2xl { font-size: 1.5rem; }
-.text-3xl { font-size: 1.875rem; }
+.text-xl { font-size: 1.1rem; }
+.text-2xl { font-size: 1.25rem; }
+.text-3xl { font-size: 1.4rem; }
 
 .font-medium { font-weight: 500; }
 .font-semibold { font-weight: 600; }

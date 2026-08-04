@@ -4,10 +4,11 @@ import { requireWriteAccess } from '../middleware/auth.js'
 
 const router = Router()
 
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { rows } = await query(
-      `SELECT * FROM stock_insumos ORDER BY nombre ASC`
+      `SELECT * FROM stock_insumos WHERE sede_id = $1 ORDER BY nombre ASC`,
+      [req.sedeId]
     )
     res.json({ data: rows })
   } catch (error) {
@@ -21,9 +22,10 @@ router.get('/search', async (req, res) => {
     const term = `%${req.query.q || ''}%`
     const { rows } = await query(
       `SELECT * FROM stock_insumos
-       WHERE nombre ILIKE $1 OR categoria ILIKE $1 OR ubicacion ILIKE $1 OR proveedor ILIKE $1
+       WHERE sede_id = $1
+         AND (nombre ILIKE $2 OR categoria ILIKE $2 OR ubicacion ILIKE $2 OR proveedor ILIKE $2)
        ORDER BY nombre ASC`,
-      [term]
+      [req.sedeId, term]
     )
     res.json({ data: rows })
   } catch (error) {
@@ -34,9 +36,10 @@ router.get('/search', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const { rows } = await query(`SELECT * FROM stock_insumos WHERE id = $1`, [
-      req.params.id,
-    ])
+    const { rows } = await query(
+      `SELECT * FROM stock_insumos WHERE id = $1 AND sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
     res.json({ data: rows[0] })
   } catch (error) {
@@ -50,11 +53,12 @@ router.post('/', requireWriteAccess, async (req, res) => {
     const b = req.body
     const { rows } = await query(
       `INSERT INTO stock_insumos (
-        nombre, descripcion, categoria, cantidad, unidad_medida, stock_minimo,
+        sede_id, nombre, descripcion, categoria, cantidad, unidad_medida, stock_minimo,
         ubicacion, proveedor, costo_unitario, fecha_ingreso, fecha_vencimiento,
         notas, created_by
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
       [
+        req.sedeId,
         b.nombre || '',
         b.descripcion ?? null,
         b.categoria || 'Insumo',
@@ -94,7 +98,7 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
         fecha_ingreso = COALESCE($10, fecha_ingreso),
         fecha_vencimiento = COALESCE($11, fecha_vencimiento),
         notas = COALESCE($12, notas)
-      WHERE id = $13
+      WHERE id = $13 AND sede_id = $14
       RETURNING *`,
       [
         b.nombre,
@@ -110,6 +114,7 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
         b.fecha_vencimiento,
         b.notas,
         req.params.id,
+        req.sedeId,
       ]
     )
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' })
@@ -122,9 +127,10 @@ router.put('/:id', requireWriteAccess, async (req, res) => {
 
 router.delete('/:id', requireWriteAccess, async (req, res) => {
   try {
-    const result = await query(`DELETE FROM stock_insumos WHERE id = $1`, [
-      req.params.id,
-    ])
+    const result = await query(
+      `DELETE FROM stock_insumos WHERE id = $1 AND sede_id = $2`,
+      [req.params.id, req.sedeId]
+    )
     if (result.rowCount === 0) return res.status(404).json({ error: 'No encontrado' })
     res.json({ data: true })
   } catch (error) {

@@ -152,10 +152,10 @@
 }
 
 .equipo-title h1 {
-  font-size: 2rem;
+  font-size: var(--fs-page-title, 1.35rem);
   font-weight: 700;
   color: #111827;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.35rem 0;
 }
 
 .equipo-subtitle {
@@ -703,7 +703,7 @@
   }
   
   .equipo-title h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
   
   .equipo-tabs {
