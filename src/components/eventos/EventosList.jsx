@@ -2,16 +2,59 @@ import React, { useState, useEffect } from 'react'
 import { useHistorial } from '../../hooks/useHistorial'
 import { useAuth } from '../../hooks/useAuth'
 import EventoForm from '../reportes/EventoForm'
-import { 
+import {
   PlusIcon,
-  EyeIcon,
-  ExclamationTriangleIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import './EventosList.css'
+
+function formatCosto(valor) {
+  const numero = Number(valor)
+  if (!valor || Number.isNaN(numero) || numero <= 0) return null
+  return `$${numero.toLocaleString('es-AR')}`
+}
+
+const EventoDetalle = ({ evento, formatearFecha, onClose, onEdit }) => {
+  const costo = formatCosto(evento.costoReparacion)
+  const filas = [
+    ['Equipo', evento.equipos?.nombre || 'Sin equipo'],
+    ['Tipo', evento.tipoEvento || '-'],
+    ['Prioridad', evento.prioridad || '-'],
+    ['Estado', evento.estado || '-'],
+    ['Fecha', formatearFecha(evento.fechaEvento)],
+    ['Técnico', evento.tecnicoResponsable || '-'],
+    ['Descripción', evento.descripcion || '-'],
+    ['Resuelto', evento.fechaResolucion ? formatearFecha(evento.fechaResolucion) : '-'],
+    ['Observaciones', evento.observacionesResolucion || '-'],
+  ]
+  if (costo) filas.push(['Costo de reparación', costo])
+
+  return (
+    <div className="detalle-overlay" onClick={onClose}>
+      <div className="detalle-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="detalle-header">
+          <h2>{evento.titulo}</h2>
+          <button className="close-btn" type="button" onClick={onClose} aria-label="Cerrar">×</button>
+        </div>
+        <dl className="detalle-list">
+          {filas.map(([label, value]) => (
+            <div key={label} className="detalle-row">
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+        {onEdit && (
+          <div className="detalle-actions">
+            <button type="button" className="btn-editar-evento" onClick={onEdit}>
+              Editar
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const EventosList = () => {
   const { eventos, cargarEventos, loading } = useHistorial()
@@ -20,6 +63,7 @@ const EventosList = () => {
   const [showEventoForm, setShowEventoForm] = useState(false)
   const [eventoToEdit, setEventoToEdit] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [detalle, setDetalle] = useState(null)
 
   useEffect(() => {
     cargarEventos()
@@ -160,86 +204,51 @@ const EventosList = () => {
       ) : (
         <div className="eventos-list">
           {filteredEventos.map((evento) => (
-            <div key={evento.id} className="evento-card">
-              <div className="evento-header">
-                <div className="evento-title-section">
+            <article key={evento.id} className="evento-card">
+              <div className="evento-row">
+                <div className="evento-main">
                   <h3 className="evento-titulo">{evento.titulo}</h3>
-                  <div className="evento-meta">
-                    <span className="evento-equipo">
-                      {evento.equipos?.nombre || 'Equipo no especificado'}
-                    </span>
-                    <span className="evento-fecha">
-                      {formatearFecha(evento.fechaEvento)}
-                    </span>
-                  </div>
+                  <p className="evento-meta">
+                    <span>{evento.equipos?.nombre || 'Sin equipo'}</span>
+                    <span>{evento.tipoEvento}</span>
+                    <span>{formatearFecha(evento.fechaEvento)}</span>
+                  </p>
                 </div>
-                <div className="evento-badges">
-                  <span className={`badge-estado ${getEstadoColor(evento.estado)}`}>
-                    {evento.estado}
-                  </span>
+                <span className={`badge-estado ${getEstadoColor(evento.estado)}`}>
+                  {evento.estado}
+                </span>
+                {evento.prioridad === 'Alta' && (
                   <span className={`badge-prioridad ${getPrioridadColor(evento.prioridad)}`}>
-                    {evento.prioridad}
+                    Alta
                   </span>
-                </div>
+                )}
+                <button
+                  type="button"
+                  className="btn-detalle-evento"
+                  onClick={() => setDetalle(evento)}
+                >
+                  Detalles
+                </button>
               </div>
-
-              <div className="evento-body">
-                <div className="evento-info">
-                  <span className="evento-tipo">
-                    <ExclamationTriangleIcon className="h-4 w-4" />
-                    {evento.tipoEvento}
-                  </span>
-                  {evento.tecnicoResponsable && (
-                    <span className="evento-tecnico">
-                      Técnico: {evento.tecnicoResponsable}
-                    </span>
-                  )}
-                </div>
-
-                {evento.descripcion && (
-                  <p className="evento-descripcion">{evento.descripcion}</p>
-                )}
-
-                {evento.fechaResolucion && (
-                  <div className="evento-resolucion">
-                    <CheckCircleIcon className="evento-resolucion-icon" />
-                    <div className="evento-resolucion-content">
-                      <span className="evento-resolucion-label">
-                        Resuelto el: {formatearFecha(evento.fechaResolucion)}
-                      </span>
-                      {evento.observacionesResolucion && (
-                        <p className="evento-observaciones">
-                          {evento.observacionesResolucion}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {evento.costoReparacion && (
-                  <div className="evento-costo">
-                    <strong>Costo de reparación:</strong> ${evento.costoReparacion.toLocaleString('es-ES')}
-                  </div>
-                )}
-              </div>
-
-              {canWrite && (
-                <div className="evento-footer">
-                  <button
-                    onClick={() => handleEditarEvento(evento)}
-                    className="btn-editar-evento"
-                  >
-                    <EyeIcon className="h-4 w-4" />
-                    Editar
-                  </button>
-                </div>
-              )}
-            </div>
+            </article>
           ))}
         </div>
       )}
 
       {/* Formulario de Evento */}
+      {detalle && (
+        <EventoDetalle
+          evento={detalle}
+          formatearFecha={formatearFecha}
+          onClose={() => setDetalle(null)}
+          onEdit={canWrite ? () => {
+            const actual = detalle
+            setDetalle(null)
+            handleEditarEvento(actual)
+          } : null}
+        />
+      )}
+
       {showEventoForm && (
         <EventoForm
           evento={eventoToEdit}
