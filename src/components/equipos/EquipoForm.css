@@ -35,10 +35,34 @@
 }
 
 .equipo-form-title {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: #111827;
   margin: 0;
+}
+
+.equipo-form-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.equipo-form-more {
+  margin-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.35rem;
+}
+
+.equipo-form-more summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #0f766e;
+  padding: 0.45rem 0;
+}
+
+.equipo-form-more[open] summary {
+  margin-bottom: 0.75rem;
 }
 
 .equipo-form-close-btn {
@@ -103,7 +127,7 @@
 }
 
 .equipo-form-tab-content {
-  padding: 1.5rem;
+  padding: 1rem 1.15rem 0.25rem;
 }
 
 .equipo-form-section {

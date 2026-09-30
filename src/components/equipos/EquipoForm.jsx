@@ -6,11 +6,6 @@ import {
   XMarkIcon,
   PhotoIcon,
   DocumentIcon,
-  MapPinIcon,
-  CalendarIcon,
-  CurrencyDollarIcon,
-  CpuChipIcon,
-  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import "./EquipoForm.css";
 
@@ -103,7 +98,6 @@ const equipoSchema = z.object({
 });
 
 const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
-  const [activeTab, setActiveTab] = useState("basicos");
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const {
@@ -111,7 +105,6 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
     reset,
   } = useForm({
     resolver: zodResolver(equipoSchema),
@@ -239,15 +232,6 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
     "Otros"
   ];
 
-  const tabs = [
-    { id: "basicos", label: "Datos Básicos", icon: CpuChipIcon },
-    { id: "tecnicos", label: "Especificaciones", icon: WrenchScrewdriverIcon },
-    { id: "ubicacion", label: "Ubicación", icon: MapPinIcon },
-    { id: "mantenimiento", label: "Mantenimiento", icon: WrenchScrewdriverIcon },
-    { id: "financiero", label: "Financiero", icon: CurrencyDollarIcon },
-    { id: "archivos", label: "Archivos", icon: DocumentIcon },
-  ];
-
   const onSubmit = (data) => {
     // Los datos ya están procesados por Zod
     const processedData = {
@@ -295,116 +279,45 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="equipo-form-tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`equipo-form-tab ${activeTab === tab.id ? 'active' : ''}`}
-            >
-              <tab.icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="equipo-form-content">
-          {/* Tab: Datos Básicos */}
-          {activeTab === "basicos" && (
             <div className="equipo-form-tab-content">
+              <p className="equipo-form-hint">Completá lo esencial. El resto se puede cargar después.</p>
               <div className="equipo-form-section">
-                <h3 className="equipo-form-section-title">Información General</h3>
                 <div className="equipo-form-grid">
                   <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Nombre del Equipo
-                    </label>
+                    <label className="equipo-form-label">Nombre</label>
                     <input
                       {...register("nombre")}
                       className="equipo-form-input"
-                      placeholder="Ej: Monitor de Signos Vitales"
+                      placeholder="Ej: Monitor de signos vitales"
                     />
-                    {errors.nombre && (
-                      <span className="equipo-form-error">{errors.nombre.message}</span>
-                    )}
                   </div>
-
                   <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Marca
-                    </label>
+                    <label className="equipo-form-label">Marca</label>
                     <input
                       {...register("marca")}
                       className="equipo-form-input"
                       placeholder="Ej: Philips"
                     />
-                    {errors.marca && (
-                      <span className="equipo-form-error">{errors.marca.message}</span>
-                    )}
                   </div>
-
                   <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Modelo
-                    </label>
+                    <label className="equipo-form-label">Modelo</label>
                     <input
                       {...register("modelo")}
                       className="equipo-form-input"
                       placeholder="Ej: MP70"
                     />
-                    {errors.modelo && (
-                      <span className="equipo-form-error">{errors.modelo.message}</span>
-                    )}
                   </div>
-
                   <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Número de Serie
-                    </label>
+                    <label className="equipo-form-label">Número de serie</label>
                     <input
                       {...register("numeroSerie")}
                       className="equipo-form-input"
                       placeholder="Ej: MSV001"
                     />
-                    {errors.numeroSerie && (
-                      <span className="equipo-form-error">{errors.numeroSerie.message}</span>
-                    )}
                   </div>
-
                   <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Código Interno
-                    </label>
-                    <input
-                      {...register("codigoInterno")}
-                      className="equipo-form-input"
-                      placeholder="Ej: HOSP-MSV-001"
-                    />
-                    {errors.codigoInterno && (
-                      <span className="equipo-form-error">{errors.codigoInterno.message}</span>
-                    )}
-                  </div>
-
-                  <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Categoría
-                    </label>
-                    <select {...register("categoria")} className="equipo-form-select">
-                      <option value="">Seleccionar categoría</option>
-                      {categorias.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                    {errors.categoria && (
-                      <span className="equipo-form-error">{errors.categoria.message}</span>
-                    )}
-                  </div>
-
-                  <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Estado
-                    </label>
+                    <label className="equipo-form-label">Estado</label>
                     <select {...register("estado")} className="equipo-form-select">
                       {estados.map(estado => (
                         <option key={estado.value} value={estado.value}>
@@ -412,17 +325,47 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                         </option>
                       ))}
                     </select>
-                    {errors.estado && (
-                      <span className="equipo-form-error">{errors.estado.message}</span>
-                    )}
+                  </div>
+                  <div className="equipo-form-field">
+                    <label className="equipo-form-label">Edificio</label>
+                    <input
+                      {...register("edificio")}
+                      className="equipo-form-input"
+                      placeholder="Ej: Principal"
+                    />
+                  </div>
+                  <div className="equipo-form-field">
+                    <label className="equipo-form-label">Sala o área</label>
+                    <input
+                      {...register("sala")}
+                      className="equipo-form-input"
+                      placeholder="Ej: UTI"
+                    />
                   </div>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Tab: Especificaciones Técnicas */}
-          {activeTab === "tecnicos" && (
+              <details className="equipo-form-more">
+                <summary>Más datos (opcional)</summary>
+                <div className="equipo-form-section">
+                  <h3 className="equipo-form-section-title">Identificación</h3>
+                  <div className="equipo-form-grid">
+                    <div className="equipo-form-field">
+                      <label className="equipo-form-label">Código interno</label>
+                      <input {...register("codigoInterno")} className="equipo-form-input" placeholder="Ej: HOSP-MSV-001" />
+                    </div>
+                    <div className="equipo-form-field">
+                      <label className="equipo-form-label">Categoría</label>
+                      <select {...register("categoria")} className="equipo-form-select">
+                        <option value="">Seleccionar categoría</option>
+                        {categorias.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
             <div className="equipo-form-tab-content">
               <div className="equipo-form-section">
                 <h3 className="equipo-form-section-title">Especificaciones Técnicas</h3>
@@ -523,28 +466,10 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Tab: Ubicación */}
-          {activeTab === "ubicacion" && (
-            <div className="equipo-form-tab-content">
               <div className="equipo-form-section">
-                <h3 className="equipo-form-section-title">Ubicación del Equipo</h3>
+                <h3 className="equipo-form-section-title">Ubicación</h3>
                 <div className="equipo-form-grid">
-                  <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Edificio
-                    </label>
-                    <input
-                      {...register("edificio")}
-                      className="equipo-form-input"
-                      placeholder="Ej: Edificio Principal"
-                    />
-                    {errors.edificio && (
-                      <span className="equipo-form-error">{errors.edificio.message}</span>
-                    )}
-                  </div>
-
                   <div className="equipo-form-field">
                     <label className="equipo-form-label">
                       Piso
@@ -558,21 +483,7 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
 
                   <div className="equipo-form-field">
                     <label className="equipo-form-label">
-                      Sala/Área
-                    </label>
-                    <input
-                      {...register("sala")}
-                      className="equipo-form-input"
-                      placeholder="Ej: UCI - Cama 1"
-                    />
-                    {errors.sala && (
-                      <span className="equipo-form-error">{errors.sala.message}</span>
-                    )}
-                  </div>
-
-                  <div className="equipo-form-field">
-                    <label className="equipo-form-label">
-                      Cama/Posición
+                      Cama o posición
                     </label>
                     <input
                       {...register("cama")}
@@ -611,11 +522,7 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Tab: Mantenimiento */}
-          {activeTab === "mantenimiento" && (
             <div className="equipo-form-tab-content">
               <div className="equipo-form-section">
                 <h3 className="equipo-form-section-title">Información de Mantenimiento</h3>
@@ -664,10 +571,6 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Tab: Financiero */}
-          {activeTab === "financiero" && (
             <div className="equipo-form-tab-content">
               <div className="equipo-form-section">
                 <h3 className="equipo-form-section-title">Información Financiera</h3>
@@ -708,10 +611,6 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Tab: Archivos */}
-          {activeTab === "archivos" && (
             <div className="equipo-form-tab-content">
               <div className="equipo-form-section">
                 <h3 className="equipo-form-section-title">Archivos y Documentos</h3>
@@ -801,7 +700,7 @@ const EquipoForm = ({ equipo = null, onSave, onCancel, isOpen }) => {
                 </div>
               </div>
             </div>
-          )}
+              </details>
 
           {/* Botones de acción */}
           <div className="equipo-form-actions">
