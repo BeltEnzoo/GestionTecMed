@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import './MantenimientoForm.css';
 
+export function equipoOptionLabel(equipo) {
+  const identidad = [equipo.marca, equipo.modelo].filter(Boolean).join(' ')
+    || equipo.nombre
+    || 'Sin nombre';
+  const ubicacion = [equipo.edificio, equipo.piso, equipo.sala].filter(Boolean).join(' · ');
+  return ubicacion ? `${identidad} — ${ubicacion}` : identidad;
+}
+
 const MantenimientoForm = ({ mantenimiento, equipos, onClose }) => {
   const [formData, setFormData] = useState({
     equipo_id: '',
@@ -94,7 +102,7 @@ const MantenimientoForm = ({ mantenimiento, equipos, onClose }) => {
                 <option value="">Seleccionar equipo</option>
                 {equipos.map(equipo => (
                   <option key={equipo.id} value={equipo.id}>
-                    {equipo.nombre} - {equipo.numero_serie}
+                    {equipoOptionLabel(equipo)}
                   </option>
                 ))}
               </select>

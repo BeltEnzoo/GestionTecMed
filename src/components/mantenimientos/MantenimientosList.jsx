@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
-import MantenimientoForm from './MantenimientoForm';
+import MantenimientoForm, { equipoOptionLabel } from './MantenimientoForm';
 import './MantenimientosList.css';
 
 const MantenimientosList = () => {
@@ -38,8 +38,16 @@ const MantenimientosList = () => {
     try {
       const { data } = await api('/api/equipos');
       const sorted = (data || [])
-        .map((e) => ({ id: e.id, nombre: e.nombre, numero_serie: e.numero_serie }))
-        .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        .map((e) => ({
+          id: e.id,
+          nombre: e.nombre,
+          marca: e.marca,
+          modelo: e.modelo,
+          edificio: e.edificio,
+          piso: e.piso,
+          sala: e.sala,
+        }))
+        .sort((a, b) => equipoOptionLabel(a).localeCompare(equipoOptionLabel(b), 'es'));
       setEquipos(sorted);
     } catch (error) {
       console.error('Error fetching equipos:', error);
