@@ -208,7 +208,9 @@ const MantenimientosList = () => {
                   </span>
                 </td>
                 <td>
-                  {mantenimiento.costo ? `$${mantenimiento.costo.toFixed(2)}` : '-'}
+                  {mantenimiento.costo != null && mantenimiento.costo !== '' && !Number.isNaN(Number(mantenimiento.costo))
+                    ? `$${Number(mantenimiento.costo).toFixed(2)}`
+                    : '-'}
                 </td>
                 <td>
                   {canWrite && (
