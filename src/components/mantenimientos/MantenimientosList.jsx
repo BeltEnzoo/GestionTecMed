@@ -4,6 +4,72 @@ import { useAuth } from '../../hooks/useAuth';
 import MantenimientoForm, { equipoOptionLabel } from './MantenimientoForm';
 import './MantenimientosList.css';
 
+function formatFecha(value) {
+  if (!value) return '-';
+  const raw = String(value).slice(0, 10);
+  const [year, month, day] = raw.split('-');
+  if (!year || !month || !day) return '-';
+  return `${day}/${month}/${year}`;
+}
+
+function formatCosto(costo) {
+  if (costo == null || costo === '' || Number.isNaN(Number(costo))) return '-';
+  return `$${Number(costo).toFixed(2)}`;
+}
+
+function equipoResumen(equipo) {
+  if (!equipo) return 'Equipo no encontrado';
+  const identidad = [equipo.marca, equipo.modelo].filter(Boolean).join(' ') || equipo.nombre;
+  return identidad || 'Sin nombre';
+}
+
+function ubicacionEquipo(equipo) {
+  if (!equipo) return '-';
+  const partes = [equipo.edificio, equipo.piso, equipo.sala].filter(Boolean);
+  return partes.length ? partes.join(' · ') : '-';
+}
+
+const MantenimientoDetalle = ({ mantenimiento, onClose }) => {
+  const equipo = mantenimiento.equipos;
+  const filas = [
+    ['Equipo', equipo?.nombre || '-'],
+    ['Marca y modelo', equipoResumen(equipo)],
+    ['Ubicación', ubicacionEquipo(equipo)],
+    ['Tipo', mantenimiento.tipo === 'preventivo' ? 'Preventivo' : 'Correctivo'],
+    ['Técnico', mantenimiento.tecnico || '-'],
+    ['Fecha programada', formatFecha(mantenimiento.fecha_programada)],
+    ['Fecha completado', formatFecha(mantenimiento.fecha_completado)],
+    ['Estado', ({
+      programado: 'Programado',
+      en_proceso: 'En proceso',
+      completado: 'Completado',
+      cancelado: 'Cancelado',
+    })[mantenimiento.estado] || mantenimiento.estado || '-'],
+    ['Costo', formatCosto(mantenimiento.costo)],
+    ['Descripción', mantenimiento.descripcion || '-'],
+    ['Observaciones', mantenimiento.observaciones || '-'],
+  ];
+
+  return (
+    <div className="detalle-overlay" onClick={onClose}>
+      <div className="detalle-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="detalle-header">
+          <h2>Detalle del mantenimiento</h2>
+          <button className="close-btn" onClick={onClose} type="button" aria-label="Cerrar">×</button>
+        </div>
+        <dl className="detalle-list">
+          {filas.map(([label, value]) => (
+            <div key={label} className="detalle-row">
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  );
+};
+
 const MantenimientosList = () => {
   const { user } = useAuth();
   const canWrite = user?.rol !== 'Invitado';
@@ -14,6 +80,7 @@ const MantenimientosList = () => {
   const [editingMantenimiento, setEditingMantenimiento] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
+  const [detalle, setDetalle] = useState(null);
 
   useEffect(() => {
     fetchMantenimientos();
@@ -185,13 +252,8 @@ const MantenimientosList = () => {
             {filteredMantenimientos.map((mantenimiento) => (
               <tr key={mantenimiento.id}>
                 <td>
-                  <div className="equipo-info">
-                    <div className="equipo-nombre">
-                      {mantenimiento.equipos?.nombre || 'Equipo no encontrado'}
-                    </div>
-                    <div className="equipo-descripcion">
-                      {mantenimiento.descripcion || 'Sin descripción'}
-                    </div>
+                  <div className="equipo-nombre" title={equipoResumen(mantenimiento.equipos)}>
+                    {equipoResumen(mantenimiento.equipos)}
                   </div>
                 </td>
                 <td>
@@ -199,46 +261,43 @@ const MantenimientosList = () => {
                     {getTipoText(mantenimiento.tipo)}
                   </span>
                 </td>
-                <td>{mantenimiento.tecnico}</td>
-                <td>
-                  <div className="fecha-info">
-                    {new Date(mantenimiento.fecha_programada).toLocaleDateString()}
-                    {mantenimiento.fecha_completado && (
-                      <div className="fecha-completado">
-                        Completado: {new Date(mantenimiento.fecha_completado).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
+                <td className="cell-clip" title={mantenimiento.tecnico || ''}>
+                  {mantenimiento.tecnico || '-'}
                 </td>
+                <td>{formatFecha(mantenimiento.fecha_programada)}</td>
                 <td>
                   <span className={`status-badge ${getStatusColor(mantenimiento.estado)}`}>
                     {getStatusText(mantenimiento.estado)}
                   </span>
                 </td>
+                <td>{formatCosto(mantenimiento.costo)}</td>
                 <td>
-                  {mantenimiento.costo != null && mantenimiento.costo !== '' && !Number.isNaN(Number(mantenimiento.costo))
-                    ? `$${Number(mantenimiento.costo).toFixed(2)}`
-                    : '-'}
-                </td>
-                <td>
-                  {canWrite && (
-                    <div className="action-buttons">
-                      <button 
-                        className="btn btn-warning btn-sm"
-                        onClick={() => handleEdit(mantenimiento)}
-                        title="Editar mantenimiento"
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(mantenimiento.id)}
-                        title="Eliminar mantenimiento"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  )}
+                  <div className="action-buttons">
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setDetalle(mantenimiento)}
+                    >
+                      Detalles
+                    </button>
+                    {canWrite && (
+                      <>
+                        <button
+                          className="btn btn-warning btn-sm"
+                          onClick={() => handleEdit(mantenimiento)}
+                          title="Editar mantenimiento"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(mantenimiento.id)}
+                          title="Eliminar mantenimiento"
+                        >
+                          Eliminar
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -251,6 +310,13 @@ const MantenimientosList = () => {
           </div>
         )}
       </div>
+
+      {detalle && (
+        <MantenimientoDetalle
+          mantenimiento={detalle}
+          onClose={() => setDetalle(null)}
+        />
+      )}
 
       {showForm && (
         <MantenimientoForm

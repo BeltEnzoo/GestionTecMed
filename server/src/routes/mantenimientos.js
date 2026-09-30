@@ -26,7 +26,7 @@ async function attachEquipos(rows) {
   const ids = [...new Set(rows.map((r) => r.equipo_id).filter(Boolean))]
   if (!ids.length) return rows.map((r) => ({ ...r, equipos: null }))
   const { rows: equipos } = await query(
-    `SELECT id, nombre, marca, modelo FROM equipos WHERE id = ANY($1::uuid[])`,
+    `SELECT id, nombre, marca, modelo, edificio, piso, sala FROM equipos WHERE id = ANY($1::uuid[])`,
     [ids]
   )
   const map = Object.fromEntries(equipos.map((e) => [e.id, e]))
